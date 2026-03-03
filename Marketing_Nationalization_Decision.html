@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Nationalization Decision — Tulane OIPM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --main: #78BE1F;
+    --main-dark: #5A9A10;
+    --main-darker: #4A8209;
+    --main-light: #F1F9E6;
+    --main-border: #C3E29A;
+    --high-green: #2E7D32;
+    --high-green-bg: #E8F5E9;
+    --med-amber: #E65100;
+    --med-amber-bg: #FFF3E0;
+    --low-red: #C62828;
+    --low-red-bg: #FFEBEE;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #E0E0E0;
+    --gray-700: #333333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F0F4EB; color: var(--gray-700); line-height: 1.5;
+  }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--main-darker); padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .toolbar span { color: white; font-weight: 600; font-size: 14px; }
+  .toolbar button {
+    background: white; color: var(--main-darker); border: none;
+    padding: 10px 22px; border-radius: 6px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: background .15s;
+  }
+  .toolbar button:hover { background: #e0e0e0; }
+  .toolbar button:disabled { opacity: .6; cursor: wait; }
+
+  /* ---- Form wrapper ---- */
+  .form-wrapper {
+    max-width: 880px; margin: 30px auto; background: white;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    background: linear-gradient(135deg, var(--main-darker) 0%, var(--main-dark) 100%);
+    padding: 28px 32px 20px; text-align: center; color: white;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .header h2 { font-size: 14px; font-weight: 500; opacity: .85; }
+
+  .body-content { padding: 24px 32px 32px; }
+
+  /* ---- Invention info ---- */
+  .invention-info {
+    background: var(--main-light); border: 1px solid var(--main-border);
+    border-radius: 6px; padding: 16px 18px; margin-bottom: 24px;
+  }
+  .inv-fields { display: grid; grid-template-columns: 1fr 2fr 1.2fr; gap: 14px; }
+
+  /* ---- Fields ---- */
+  .field label {
+    display: block; font-size: 11px; font-weight: 600; color: #555;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--gray-200);
+    border-radius: 4px; font-size: 14px; font-family: inherit;
+    background: white; transition: border-color .15s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none; border-color: var(--main-dark);
+    box-shadow: 0 0 0 2px rgba(120,190,31,.2);
+  }
+  .field textarea { resize: vertical; }
+
+  /* ---- Section ---- */
+  .section { margin-bottom: 24px; }
+  .section-header {
+    background: var(--main-darker); color: white;
+    padding: 10px 16px; border-radius: 5px 5px 0 0;
+    font-weight: 600; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-body {
+    border: 1px solid var(--gray-200); border-top: none;
+    border-radius: 0 0 5px 5px; padding: 16px;
+  }
+
+  /* ---- Guidance box ---- */
+  .guidance {
+    background: var(--main-light); border: 1px solid var(--main-border);
+    border-radius: 4px; padding: 10px 14px; margin-bottom: 14px;
+    font-size: 12px; color: #555; line-height: 1.6;
+  }
+  .guidance strong { color: var(--main-darker); }
+
+  /* ---- Priority selector ---- */
+  .priority-row {
+    display: flex; gap: 8px; margin-bottom: 14px;
+  }
+  .priority-btn {
+    flex: 1; padding: 10px 12px; border: 2px solid var(--gray-200);
+    border-radius: 6px; background: white; cursor: pointer;
+    text-align: center; font-weight: 600; font-size: 13px;
+    font-family: inherit; transition: all .15s;
+  }
+  .priority-btn:hover { background: var(--gray-50); }
+  .priority-btn input[type="radio"] { display: none; }
+
+  .priority-btn.high.selected {
+    background: var(--high-green-bg); border-color: var(--high-green);
+    color: var(--high-green);
+  }
+  .priority-btn.medium.selected {
+    background: var(--med-amber-bg); border-color: var(--med-amber);
+    color: var(--med-amber);
+  }
+  .priority-btn.low.selected {
+    background: var(--low-red-bg); border-color: var(--low-red);
+    color: var(--low-red);
+  }
+
+  /* ---- Priority badge in section header ---- */
+  .priority-badge {
+    padding: 2px 12px; border-radius: 3px;
+    font-size: 12px; font-weight: 600;
+    background: rgba(255,255,255,.2); text-transform: uppercase;
+  }
+  .priority-badge.high { background: var(--high-green-bg); color: var(--high-green); }
+  .priority-badge.medium { background: var(--med-amber-bg); color: var(--med-amber); }
+  .priority-badge.low { background: var(--low-red-bg); color: var(--low-red); }
+
+  /* ---- Sub-section fields ---- */
+  .sub-field { margin-bottom: 14px; }
+  .sub-field label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--gray-700);
+    margin-bottom: 4px;
+  }
+  .sub-field textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200);
+    border-radius: 4px; font-size: 13px; font-family: inherit;
+    min-height: 80px; resize: vertical; transition: border-color .15s;
+  }
+  .sub-field textarea:focus {
+    outline: none; border-color: var(--main-dark);
+    box-shadow: 0 0 0 2px rgba(120,190,31,.2);
+  }
+
+  /* ---- Summary ---- */
+  .summary-box {
+    background: var(--gray-100); border: 1px solid var(--gray-200);
+    border-radius: 6px; padding: 16px 20px; margin: 24px 0; text-align: center;
+  }
+  .summary-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: #888; font-weight: 600; margin-bottom: 10px;
+  }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    margin-top: 10px;
+  }
+  .summary-item {
+    padding: 10px 8px; border-radius: 5px; text-align: center;
+    border: 1px solid var(--gray-200); background: white;
+  }
+  .summary-item .region-name {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+    color: #888; font-weight: 600; margin-bottom: 4px;
+  }
+  .summary-item .region-priority {
+    font-size: 16px; font-weight: 800;
+  }
+  .summary-item.high { border-color: #A5D6A7; background: var(--high-green-bg); }
+  .summary-item.high .region-priority { color: var(--high-green); }
+  .summary-item.medium { border-color: #FFCC80; background: var(--med-amber-bg); }
+  .summary-item.medium .region-priority { color: var(--med-amber); }
+  .summary-item.low { border-color: #EF9A9A; background: var(--low-red-bg); }
+  .summary-item.low .region-priority { color: var(--low-red); }
+  .summary-item.none .region-priority { color: #aaa; }
+
+  /* ---- Signature ---- */
+  .sig-block {
+    border-top: 1px solid var(--gray-200); padding-top: 16px; margin-top: 16px;
+  }
+  .sig-block h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .sig-fields { display: grid; grid-template-columns: 2fr 1.2fr 1fr; gap: 14px; }
+  .notes-field { margin-top: 14px; }
+  .notes-field textarea { min-height: 80px; resize: vertical; }
+
+  /* ---- Footer ---- */
+  .footer {
+    background: var(--main-darker); color: white;
+    text-align: center; padding: 10px; font-size: 10px; opacity: .85;
+  }
+
+  @media print {
+    body { background: white; }
+    .toolbar { display: none !important; }
+    .form-wrapper { box-shadow: none; border-radius: 0; margin: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar" id="toolbar">
+  <span>Tulane OIPM — Marketing Nationalization Decision</span>
+  <button id="dlBtn" onclick="downloadPDF()">Download as PDF</button>
+</div>
+
+<!-- FORM -->
+<div class="form-wrapper" id="formContent">
+
+  <div class="header">
+    <h1>Tulane Office of Intellectual Property Management</h1>
+    <h2>Marketing Nationalization Decision</h2>
+  </div>
+
+  <div class="body-content">
+
+    <!-- Invention Info -->
+    <div class="invention-info">
+      <div class="inv-fields">
+        <div class="field"><label>Invention Track Code</label><input type="text" placeholder="e.g. TUL-2024-0142"></div>
+        <div class="field"><label>Invention Title</label><input type="text" placeholder="Enter title"></div>
+        <div class="field"><label>Lead PI</label><input type="text" placeholder="Principal Investigator"></div>
+      </div>
+    </div>
+
+    <!-- Guidance -->
+    <div class="guidance">
+      <strong>Instructions:</strong> For each market region, select a priority level (High / Medium / Low) and provide supporting details on market size, sales of similar technologies, manufacturing capabilities, and other relevant factors. <strong>Guidance should be sought from the OIPM Licensing Officer assigned to the technology prior to research for specific questions in each market.</strong>
+    </div>
+
+    <!-- ===== US MARKET ===== -->
+    <div class="section" data-region="us">
+      <div class="section-header">
+        <span>US Market Assessment</span>
+        <span class="priority-badge" id="badge_us">—</span>
+      </div>
+      <div class="section-body">
+        <div class="priority-row">
+          <label class="priority-btn high" onclick="selectPriority('us','High',this)">
+            <input type="radio" name="priority_us" value="High"> High Priority
+          </label>
+          <label class="priority-btn medium" onclick="selectPriority('us','Medium',this)">
+            <input type="radio" name="priority_us" value="Medium"> Medium Priority
+          </label>
+          <label class="priority-btn low" onclick="selectPriority('us','Low',this)">
+            <input type="radio" name="priority_us" value="Low"> Low Priority
+          </label>
+        </div>
+        <div class="sub-field">
+          <label>Market Size & Revenue Potential</label>
+          <textarea placeholder="Describe total addressable market, revenue projections, growth trends in the US market…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Sales of Similar Technologies</label>
+          <textarea placeholder="Identify competing products, their market share, pricing, and sales performance…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Manufacturing Capabilities & Infrastructure</label>
+          <textarea placeholder="Domestic manufacturing options, supply chain considerations, regulatory requirements…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Additional Considerations</label>
+          <textarea placeholder="Licensing prospects, strategic partners, regulatory pathway, market barriers…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== EUROPEAN MARKET ===== -->
+    <div class="section" data-region="eu">
+      <div class="section-header">
+        <span>European Market Assessment</span>
+        <span class="priority-badge" id="badge_eu">—</span>
+      </div>
+      <div class="section-body">
+        <div class="priority-row">
+          <label class="priority-btn high" onclick="selectPriority('eu','High',this)">
+            <input type="radio" name="priority_eu" value="High"> High Priority
+          </label>
+          <label class="priority-btn medium" onclick="selectPriority('eu','Medium',this)">
+            <input type="radio" name="priority_eu" value="Medium"> Medium Priority
+          </label>
+          <label class="priority-btn low" onclick="selectPriority('eu','Low',this)">
+            <input type="radio" name="priority_eu" value="Low"> Low Priority
+          </label>
+        </div>
+        <div class="sub-field">
+          <label>Market Size & Revenue Potential</label>
+          <textarea placeholder="Describe total addressable market, revenue projections, growth trends in the European market…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Sales of Similar Technologies</label>
+          <textarea placeholder="Identify competing products, their market share, pricing, and sales performance in Europe…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Manufacturing Capabilities & Infrastructure</label>
+          <textarea placeholder="European manufacturing options, supply chain considerations, CE marking / regulatory requirements…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Additional Considerations</label>
+          <textarea placeholder="Key jurisdictions (DE, FR, UK, etc.), licensing prospects, market barriers, unitary patent considerations…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ASIA/PACIFIC MARKET ===== -->
+    <div class="section" data-region="apac">
+      <div class="section-header">
+        <span>Asia / Pacific Market Assessment</span>
+        <span class="priority-badge" id="badge_apac">—</span>
+      </div>
+      <div class="section-body">
+        <div class="priority-row">
+          <label class="priority-btn high" onclick="selectPriority('apac','High',this)">
+            <input type="radio" name="priority_apac" value="High"> High Priority
+          </label>
+          <label class="priority-btn medium" onclick="selectPriority('apac','Medium',this)">
+            <input type="radio" name="priority_apac" value="Medium"> Medium Priority
+          </label>
+          <label class="priority-btn low" onclick="selectPriority('apac','Low',this)">
+            <input type="radio" name="priority_apac" value="Low"> Low Priority
+          </label>
+        </div>
+        <div class="sub-field">
+          <label>Market Size & Revenue Potential</label>
+          <textarea placeholder="Describe total addressable market, revenue projections, growth trends in Asia/Pacific…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Sales of Similar Technologies</label>
+          <textarea placeholder="Identify competing products, their market share, pricing, and sales performance in Asia/Pacific…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Manufacturing Capabilities & Infrastructure</label>
+          <textarea placeholder="Manufacturing options in CN, JP, KR, IN, AU, etc., supply chain, regulatory requirements…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Additional Considerations</label>
+          <textarea placeholder="Key jurisdictions, IP enforcement climate, licensing prospects, market barriers…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ADDITIONAL MARKET ===== -->
+    <div class="section" data-region="other">
+      <div class="section-header">
+        <span>Additional Market Assessment</span>
+        <span class="priority-badge" id="badge_other">—</span>
+      </div>
+      <div class="section-body">
+        <div class="priority-row">
+          <label class="priority-btn high" onclick="selectPriority('other','High',this)">
+            <input type="radio" name="priority_other" value="High"> High Priority
+          </label>
+          <label class="priority-btn medium" onclick="selectPriority('other','Medium',this)">
+            <input type="radio" name="priority_other" value="Medium"> Medium Priority
+          </label>
+          <label class="priority-btn low" onclick="selectPriority('other','Low',this)">
+            <input type="radio" name="priority_other" value="Low"> Low Priority
+          </label>
+        </div>
+        <div class="sub-field">
+          <label>Region(s) / Country(ies)</label>
+          <textarea placeholder="Specify the additional markets being assessed (e.g. Canada, Brazil, Israel, Middle East)…" style="min-height:50px;"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Market Size & Revenue Potential</label>
+          <textarea placeholder="Describe total addressable market, revenue projections, growth trends…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Sales of Similar Technologies</label>
+          <textarea placeholder="Identify competing products, their market share, pricing, and sales performance…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Manufacturing Capabilities & Infrastructure</label>
+          <textarea placeholder="Manufacturing options, supply chain considerations, regulatory requirements…"></textarea>
+        </div>
+        <div class="sub-field">
+          <label>Additional Considerations</label>
+          <textarea placeholder="Licensing prospects, strategic partners, regulatory pathway, market barriers…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SUMMARY ===== -->
+    <div class="summary-box" id="summaryBox">
+      <div class="summary-label">Market Priority Summary</div>
+      <div class="summary-grid">
+        <div class="summary-item" id="sum_us">
+          <div class="region-name">US</div>
+          <div class="region-priority">—</div>
+        </div>
+        <div class="summary-item" id="sum_eu">
+          <div class="region-name">Europe</div>
+          <div class="region-priority">—</div>
+        </div>
+        <div class="summary-item" id="sum_apac">
+          <div class="region-name">Asia / Pacific</div>
+          <div class="region-priority">—</div>
+        </div>
+        <div class="summary-item" id="sum_other">
+          <div class="region-name">Additional</div>
+          <div class="region-priority">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="sig-block">
+      <h4>Reviewer Information</h4>
+      <div class="sig-fields">
+        <div class="field"><label>Reviewer</label><input type="text" placeholder="Full name"></div>
+        <div class="field"><label>Date</label><input type="date"></div>
+        <div class="field"><label>Time Spent (hrs)</label><input type="text" placeholder="e.g. 3.0"></div>
+      </div>
+      <div class="field notes-field">
+        <label>Notes / Nationalization Recommendation</label>
+        <textarea placeholder="Overall recommendation, key markets to pursue, rationale, risk factors…"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Tulane Office of Intellectual Property Management &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Marketing Nationalization Decision
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   PRIORITY SELECTION
+   ============================================================ */
+function selectPriority(region, level, btn) {
+  /* Deselect siblings */
+  const row = btn.closest('.priority-row');
+  row.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  btn.querySelector('input[type="radio"]').checked = true;
+
+  /* Update badge */
+  const badge = document.getElementById('badge_' + region);
+  badge.textContent = level + ' Priority';
+  badge.className = 'priority-badge ' + level.toLowerCase();
+
+  /* Update summary */
+  updateSummary(region, level);
+}
+
+/* ============================================================
+   SUMMARY UPDATE
+   ============================================================ */
+function updateSummary(region, level) {
+  const item = document.getElementById('sum_' + region);
+  item.className = 'summary-item ' + level.toLowerCase();
+  item.querySelector('.region-priority').textContent = level;
+}
+
+/* ============================================================
+   PDF DOWNLOAD
+   ============================================================ */
+function downloadPDF() {
+  const btn = document.getElementById('dlBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  document.getElementById('toolbar').style.display = 'none';
+
+  const el = document.getElementById('formContent');
+  const opt = {
+    margin:       [0.2, 0.3, 0.2, 0.3],
+    filename:     'Marketing_Nationalization_Decision.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, logging: false },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy'], avoid: ['.section', '.summary-box', '.sig-block'] }
+  };
+
+  html2pdf().set(opt).from(el).save().then(() => {
+    document.getElementById('toolbar').style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Download as PDF';
+  });
+}
+</script>
+</body>
+</html>
