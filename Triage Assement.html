@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Initial Triage Checklist — Tulane OIP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --tulane-green: #006747;
+    --tulane-green-light: #EAF4F0;
+    --pass-green: #2E7D32;
+    --fail-red: #C62828;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #E0E0E0;
+    --gray-700: #333333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f0f0;
+    color: var(--gray-700);
+    line-height: 1.5;
+  }
+
+  /* ---- Download button bar (hidden in print/PDF) ---- */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--tulane-green);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .toolbar span {
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .toolbar button {
+    background: white;
+    color: var(--tulane-green);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .toolbar button:hover { background: #e0e0e0; }
+  .toolbar button:disabled {
+    opacity: .6;
+    cursor: wait;
+  }
+
+  /* ---- Form container ---- */
+  .form-wrapper {
+    max-width: 800px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.12);
+    overflow: hidden;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    background: var(--tulane-green);
+    padding: 28px 32px 20px;
+    text-align: center;
+    color: white;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header h2 { font-size: 15px; font-weight: 500; opacity: .9; margin-bottom: 2px; }
+  .header p  { font-size: 11px; opacity: .7; }
+
+  .body-content { padding: 24px 32px 32px; }
+
+  /* ---- Section ---- */
+  .section { margin-bottom: 22px; }
+
+  .section-header {
+    background: var(--tulane-green);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .checklist { padding-left: 6px; }
+
+  .checklist label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .1s;
+  }
+  .checklist label:hover { background: var(--gray-100); }
+
+  .checklist input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--tulane-green);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  /* ---- Pass / Fail row ---- */
+  .pass-fail {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 8px 8px 4px 30px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .pass-fail .label { color: var(--tulane-green); }
+  .pass-fail .pass-opt { color: var(--pass-green); display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .pass-fail .fail-opt { color: var(--fail-red); display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .pass-fail input[type="radio"] { cursor: pointer; accent-color: currentColor; }
+
+  /* ---- Decision box ---- */
+  .decision-box {
+    border: 2.5px solid var(--tulane-green);
+    border-radius: 8px;
+    padding: 18px 24px;
+    background: #E8F5E9;
+    text-align: center;
+    margin: 24px 0;
+  }
+  .decision-box h3 {
+    font-size: 18px;
+    color: var(--tulane-green);
+    margin-bottom: 14px;
+  }
+  .decision-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .decision-row.go   { color: var(--pass-green); }
+  .decision-row.nogo { color: var(--fail-red); }
+  .decision-row input[type="radio"] { width: 18px; height: 18px; cursor: pointer; }
+
+  /* ---- Signature block ---- */
+  .sig-block {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 16px;
+    margin-top: 16px;
+  }
+  .sig-block h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--gray-700);
+  }
+  .sig-fields {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1fr;
+    gap: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--gray-50);
+    transition: border-color .15s;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--tulane-green);
+    box-shadow: 0 0 0 2px rgba(0,103,71,.12);
+  }
+  .notes-field { margin-top: 14px; }
+  .notes-field textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+
+  /* ---- Invention info fields ---- */
+  .invention-info {
+    background: var(--tulane-green-light);
+    border: 1px solid #c8ddd5;
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin-bottom: 22px;
+  }
+  .inv-fields {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1.2fr;
+    gap: 14px;
+  }
+
+  /* ---- Auto-score status banner ---- */
+  .auto-score-banner {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+    text-align: center;
+    display: none;
+  }
+  .auto-score-banner.show { display: block; }
+  .auto-score-banner.go-banner   { background: #E8F5E9; color: var(--pass-green); border: 1px solid #A5D6A7; }
+  .auto-score-banner.nogo-banner { background: #FFEBEE; color: var(--fail-red);   border: 1px solid #EF9A9A; }
+  .auto-score-banner.pending-banner { background: #FFF8E1; color: #F57F17; border: 1px solid #FFE082; }
+
+  /* Highlight the decision row that was auto-selected */
+  .decision-row.auto-selected {
+    background: rgba(0,0,0,.04);
+    border-radius: 4px;
+    padding: 6px 10px;
+  }
+
+  /* ---- Footer ---- */
+  .footer {
+    background: var(--tulane-green);
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 10px;
+    opacity: .85;
+  }
+
+  /* ---- Print / PDF styles ---- */
+  @media print {
+    body { background: white; }
+    .toolbar { display: none !important; }
+    .form-wrapper {
+      box-shadow: none;
+      border-radius: 0;
+      margin: 0;
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sticky toolbar (excluded from PDF) -->
+<div class="toolbar no-print" id="toolbar">
+  <span>Tulane OIP — Initial Triage Checklist</span>
+  <button onclick="downloadPDF()" id="dlBtn">Download as PDF</button>
+</div>
+
+<!-- ===== FORM CONTENT ===== -->
+<div class="form-wrapper" id="formContent">
+
+  <div class="header">
+    <h1>Tulane Office of Intellectual Property</h1>
+    <h2>Initial Triage Checklist</h2>
+    <p>Binary Decision — Single reviewer completes within 21 days of disclosure receipt</p>
+  </div>
+
+  <div class="body-content">
+
+    <!-- INVENTION INFO -->
+    <div class="invention-info">
+      <div class="inv-fields">
+        <div class="field"><label>Invention Track Code</label><input type="text" placeholder="e.g. TU-2026-001"></div>
+        <div class="field"><label>Invention Title</label><input type="text" placeholder="Title of the invention"></div>
+        <div class="field"><label>Lead PI</label><input type="text" placeholder="Principal Investigator name"></div>
+      </div>
+    </div>
+
+    <!-- SECTION 1 -->
+    <div class="section">
+      <div class="section-header">1. Bar Date Compliance</div>
+      <div class="checklist">
+        <label><input type="checkbox"> No public disclosure &gt;1 year before filing date</label>
+        <label><input type="checkbox"> No sale or offer for sale &gt;1 year before filing date</label>
+        <label><input type="checkbox"> No prior patent/publication by inventor &gt;1 year ago</label>
+      </div>
+      <div class="pass-fail">
+        <span class="label">Result:</span>
+        <label class="pass-opt"><input type="radio" name="bar"> PASS</label>
+        <label class="fail-opt"><input type="radio" name="bar"> FAIL</label>
+      </div>
+    </div>
+
+    <!-- SECTION 2 -->
+    <div class="section">
+      <div class="section-header">2. Prior Art Red Flags — 35 U.S.C. §§ 102, 103 &nbsp;(15–30 min search)</div>
+      <div class="checklist">
+        <label><input type="checkbox"> No identical disclosure found in patent databases</label>
+        <label><input type="checkbox"> No obvious combination of 2–3 references</label>
+        <label><input type="checkbox"> Distinguishing features clearly identifiable</label>
+      </div>
+      <div class="pass-fail">
+        <span class="label">Result:</span>
+        <label class="pass-opt"><input type="radio" name="prior_art"> PASS</label>
+        <label class="fail-opt"><input type="radio" name="prior_art"> FAIL</label>
+      </div>
+    </div>
+
+    <!-- SECTION 3 -->
+    <div class="section">
+      <div class="section-header">3. Subject Matter Eligibility — 35 U.S.C. § 101</div>
+      <div class="checklist">
+        <label><input type="checkbox"> Not abstract idea without technical implementation</label>
+        <label><input type="checkbox"> Not natural phenomenon or law of nature</label>
+        <label><input type="checkbox"> Not mental process or pure business method</label>
+      </div>
+      <div class="pass-fail">
+        <span class="label">Result:</span>
+        <label class="pass-opt"><input type="radio" name="sme"> PASS</label>
+        <label class="fail-opt"><input type="radio" name="sme"> FAIL</label>
+      </div>
+    </div>
+
+    <!-- SECTION 4 -->
+    <div class="section">
+      <div class="section-header">4. Basic Enablement</div>
+      <div class="checklist">
+        <label><input type="checkbox"> Disclosure provides sufficient detail for implementation</label>
+        <label><input type="checkbox"> Key technical elements described adequately</label>
+        <label><input type="checkbox"> Working examples or clear methodology provided</label>
+      </div>
+      <div class="pass-fail">
+        <span class="label">Result:</span>
+        <label class="pass-opt"><input type="radio" name="enable"> PASS</label>
+        <label class="fail-opt"><input type="radio" name="enable"> FAIL</label>
+      </div>
+    </div>
+
+    <!-- TRIAGE DECISION -->
+    <div class="decision-box">
+      <h3>TRIAGE DECISION</h3>
+      <div class="decision-row go" id="decisionGo">
+        <input type="radio" name="decision" value="go" id="radioGo">
+        <span>GO — All sections PASS → Proceed to Gate 1 Deep Dive Scoring</span>
+      </div>
+      <div class="decision-row nogo" id="decisionNogo">
+        <input type="radio" name="decision" value="nogo" id="radioNogo">
+        <span>NO-GO — Any section FAILS → Reject, provide feedback to inventor</span>
+      </div>
+      <div class="auto-score-banner" id="scoreBanner"></div>
+    </div>
+
+    <!-- SIGNATURE BLOCK -->
+    <div class="sig-block">
+      <h4>Reviewer Information</h4>
+      <div class="sig-fields">
+        <div class="field"><label>Reviewer</label><input type="text" placeholder="Full name"></div>
+        <div class="field"><label>Date</label><input type="date"></div>
+        <div class="field"><label>Time Spent (hrs)</label><input type="text" placeholder="e.g. 1.5"></div>
+      </div>
+      <div class="field notes-field">
+        <label>Notes / Comments</label>
+        <textarea placeholder="Add any additional notes about this triage review…"></textarea>
+      </div>
+    </div>
+
+  </div><!-- /body-content -->
+
+  <div class="footer">
+    Tulane Office of Intellectual Property &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Initial Triage Checklist
+  </div>
+
+</div><!-- /form-wrapper -->
+
+<script>
+/* ============================================================
+   AUTO-SCORING: watch all PASS/FAIL radios → set decision
+   ============================================================ */
+const sectionNames = ['bar', 'prior_art', 'sme', 'enable'];
+
+function getResult(name) {
+  const radios = document.querySelectorAll(`input[name="${name}"]`);
+  for (const r of radios) {
+    if (r.checked) {
+      // PASS is always the first radio, FAIL is the second
+      return r.closest('.pass-opt') ? 'pass' : 'fail';
+    }
+  }
+  return null; // not yet answered
+}
+
+function updateDecision() {
+  const results = sectionNames.map(getResult);
+  const answered = results.filter(r => r !== null).length;
+  const anyFail  = results.includes('fail');
+  const allPass  = answered === sectionNames.length && !anyFail;
+
+  const banner   = document.getElementById('scoreBanner');
+  const radioGo  = document.getElementById('radioGo');
+  const radioNo  = document.getElementById('radioNogo');
+  const rowGo    = document.getElementById('decisionGo');
+  const rowNogo  = document.getElementById('decisionNogo');
+
+  // Reset highlights
+  rowGo.classList.remove('auto-selected');
+  rowNogo.classList.remove('auto-selected');
+  banner.className = 'auto-score-banner';
+
+  if (anyFail) {
+    // Immediately set NO-GO
+    radioNo.checked = true;
+    radioGo.checked = false;
+    rowNogo.classList.add('auto-selected');
+    banner.textContent = 'Auto-scored: FAIL detected → NO-GO';
+    banner.classList.add('show', 'nogo-banner');
+  } else if (allPass) {
+    // All four sections are PASS → GO
+    radioGo.checked = true;
+    radioNo.checked = false;
+    rowGo.classList.add('auto-selected');
+    banner.textContent = 'Auto-scored: All sections PASS → GO';
+    banner.classList.add('show', 'go-banner');
+  } else if (answered > 0) {
+    // Some answered, none failed yet, not all complete
+    radioGo.checked = false;
+    radioNo.checked = false;
+    banner.textContent = `${answered} of ${sectionNames.length} sections scored — awaiting remaining results`;
+    banner.classList.add('show', 'pending-banner');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// Attach listeners to all PASS/FAIL radios
+document.querySelectorAll('.pass-fail input[type="radio"]').forEach(radio => {
+  radio.addEventListener('change', updateDecision);
+});
+
+/* ============================================================
+   PDF DOWNLOAD
+   ============================================================ */
+function downloadPDF() {
+  const btn = document.getElementById('dlBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+
+  // Hide the toolbar so it doesn't appear in the PDF
+  document.getElementById('toolbar').style.display = 'none';
+
+  const el = document.getElementById('formContent');
+  const opt = {
+    margin:       [0.3, 0.4, 0.3, 0.4],
+    filename:     'Initial_Triage_Checklist.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, logging: false },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+    pagebreak:    { mode: ['avoid-all'] }
+  };
+
+  html2pdf().set(opt).from(el).save().then(() => {
+    document.getElementById('toolbar').style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Download as PDF';
+  });
+}
+</script>
+</body>
+</html>

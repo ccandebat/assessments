@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Non-Provisional Scoring — Tulane OIPM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --main: #71C5E8;
+    --main-dark: #2A9AC7;
+    --main-darker: #1B7EA6;
+    --main-light: #EBF7FC;
+    --main-border: #B5E2F3;
+    --advance-green: #2E7D32;
+    --advance-green-bg: #E8F5E9;
+    --nogo-red: #C62828;
+    --nogo-red-bg: #FFEBEE;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #E0E0E0;
+    --gray-700: #333333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #EEF4F7; color: var(--gray-700); line-height: 1.5;
+  }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--main-darker); padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .toolbar span { color: white; font-weight: 600; font-size: 14px; }
+  .toolbar button {
+    background: white; color: var(--main-darker); border: none;
+    padding: 10px 22px; border-radius: 6px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: background .15s;
+  }
+  .toolbar button:hover { background: #e0e0e0; }
+  .toolbar button:disabled { opacity: .6; cursor: wait; }
+
+  /* ---- Form wrapper ---- */
+  .form-wrapper {
+    max-width: 850px; margin: 30px auto; background: white;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    background: linear-gradient(135deg, var(--main-darker) 0%, var(--main-dark) 100%);
+    padding: 28px 32px 20px; text-align: center; color: white;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .header h2 { font-size: 15px; font-weight: 600; opacity: .95; }
+
+  .body-content { padding: 24px 32px 32px; }
+
+  /* ---- Invention info ---- */
+  .invention-info {
+    background: var(--main-light); border: 1px solid var(--main-border);
+    border-radius: 6px; padding: 16px 18px; margin-bottom: 24px;
+  }
+  .inv-fields {
+    display: grid; grid-template-columns: 1fr 2fr 1.2fr; gap: 14px;
+  }
+  .rec-row {
+    margin-top: 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .rec-row label { margin-bottom: 0 !important; }
+
+  /* ---- Fields ---- */
+  .field label {
+    display: block; font-size: 11px; font-weight: 600; color: #555;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--gray-200);
+    border-radius: 4px; font-size: 14px; font-family: inherit;
+    background: white; transition: border-color .15s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none; border-color: var(--main-dark);
+    box-shadow: 0 0 0 2px rgba(113,197,232,.2);
+  }
+  .field textarea { resize: vertical; }
+
+  /* ---- Section ---- */
+  .section { margin-bottom: 24px; }
+  .section-header {
+    background: var(--main-darker); color: white;
+    padding: 10px 16px; border-radius: 5px 5px 0 0;
+    font-weight: 600; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-header .pts {
+    background: rgba(255,255,255,.2); padding: 2px 10px;
+    border-radius: 3px; font-size: 12px; font-weight: 500;
+  }
+  .section-body {
+    border: 1px solid var(--gray-200); border-top: none;
+    border-radius: 0 0 5px 5px; padding: 0;
+  }
+  .section-body.padded { padding: 18px 16px; }
+  .section-guidance {
+    font-size: 12px; color: #888; margin-bottom: 12px; line-height: 1.6;
+  }
+
+  /* ---- Scoring category cards ---- */
+  .score-category {
+    padding: 18px 20px; border-bottom: 1px solid var(--gray-200);
+  }
+  .score-category:last-child { border-bottom: none; }
+
+  .cat-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .cat-title { font-size: 15px; font-weight: 700; color: var(--main-darker); }
+  .cat-score-display {
+    font-size: 22px; font-weight: 800; color: var(--main-darker);
+    min-width: 55px; text-align: center;
+  }
+  .cat-score-display.empty { color: #ccc; }
+
+  .score-slider-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .score-slider-row input[type="range"] {
+    flex: 1; height: 6px; -webkit-appearance: none; appearance: none;
+    background: var(--gray-200); border-radius: 3px; outline: none; cursor: pointer;
+  }
+  .score-slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--main-dark); cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+  }
+  .score-slider-row input[type="range"]::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--main-dark); cursor: pointer; border: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+  }
+  .score-num-input {
+    width: 60px !important; text-align: center; font-weight: 700;
+    font-size: 16px !important;
+  }
+
+  /* Scoring guide */
+  .scoring-guide {
+    background: var(--gray-50); border: 1px solid var(--gray-200);
+    border-radius: 5px; padding: 12px 14px;
+  }
+  .scoring-guide h4 {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .8px;
+    color: #999; margin-bottom: 8px; font-weight: 600;
+  }
+  .guide-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 4px 0; font-size: 12.5px; line-height: 1.5;
+  }
+  .guide-score {
+    font-weight: 700; color: var(--main-darker);
+    min-width: 28px; text-align: right; flex-shrink: 0;
+  }
+  .guide-desc { color: #555; }
+
+  /* Score bar */
+  .score-bar-bg {
+    height: 8px; background: var(--gray-200); border-radius: 4px;
+    margin-top: 8px; overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%; border-radius: 4px; transition: width .25s, background .25s;
+    background: var(--main-dark);
+  }
+
+  /* ---- Live total ---- */
+  .live-total {
+    background: var(--gray-100); border: 1px solid var(--gray-200);
+    border-radius: 6px; padding: 16px 20px; margin: 24px 0; text-align: center;
+  }
+  .live-total .total-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: #888; font-weight: 600;
+  }
+  .live-total .total-score {
+    font-size: 48px; font-weight: 800; line-height: 1; margin: 6px 0;
+  }
+  .live-total .total-max { font-size: 13px; color: #aaa; font-weight: 500; }
+  .live-total .threshold-note {
+    font-size: 12px; color: var(--main-darker); font-weight: 600; margin-top: 6px;
+  }
+
+  /* ---- Decision box ---- */
+  .decision-box {
+    border-radius: 8px; padding: 20px 24px; text-align: center;
+    margin: 24px 0; border: 2.5px solid var(--gray-200); transition: all .3s;
+  }
+  .decision-box h3 { font-size: 18px; margin-bottom: 6px; }
+  .decision-box.advance   { border-color: var(--advance-green); background: var(--advance-green-bg); }
+  .decision-box.advance h3 { color: var(--advance-green); }
+  .decision-box.nogo      { border-color: var(--nogo-red); background: var(--nogo-red-bg); }
+  .decision-box.nogo h3   { color: var(--nogo-red); }
+  .decision-box.pending   { border-color: var(--gray-200); background: var(--gray-100); }
+  .decision-box.pending h3 { color: #888; }
+  .decision-action { font-size: 14px; font-weight: 600; }
+  .decision-detail { font-size: 12px; color: #666; margin-top: 4px; }
+
+  /* ---- Signature ---- */
+  .sig-block {
+    border-top: 1px solid var(--gray-200); padding-top: 16px; margin-top: 20px;
+  }
+  .sig-block h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .sig-fields {
+    display: grid; grid-template-columns: 2fr 1.2fr 1fr; gap: 14px;
+  }
+  .notes-field { margin-top: 14px; }
+  .notes-field textarea { min-height: 80px; resize: vertical; }
+
+  /* ---- Footer ---- */
+  .footer {
+    background: var(--main-darker); color: white;
+    text-align: center; padding: 10px; font-size: 10px; opacity: .85;
+  }
+
+  @media print {
+    body { background: white; }
+    .toolbar { display: none !important; }
+    .form-wrapper { box-shadow: none; border-radius: 0; margin: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <span>Tulane OIPM — Non-Provisional Scoring</span>
+  <button onclick="downloadPDF()" id="dlBtn">Download as PDF</button>
+</div>
+
+<div class="form-wrapper" id="formContent">
+
+  <div class="header">
+    <h1>Tulane Technology Non-Provisional Scoring</h1>
+    <h2>Tulane University Innovation Institute</h2>
+  </div>
+
+  <div class="body-content">
+
+    <!-- ===== INVENTION INFO ===== -->
+    <div class="invention-info">
+      <div class="inv-fields">
+        <div class="field"><label>Invention Track Code</label><input type="text" placeholder="e.g. TU-2026-001"></div>
+        <div class="field"><label>Invention Title</label><input type="text" placeholder="Title of the invention"></div>
+        <div class="field"><label>Lead PI</label><input type="text" placeholder="Principal Investigator name"></div>
+      </div>
+      <div class="rec-row">
+        <div class="field" style="flex:0 0 auto;">
+          <label>Recommendation</label>
+          <select style="max-width:200px;">
+            <option value="">Select…</option>
+            <option value="advance">Advance to Non-Provisional</option>
+            <option value="hold">Hold / Reassess</option>
+            <option value="release">Release / Abandon</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 0 auto; margin-left:auto;">
+          <label>Date</label>
+          <input type="date" style="max-width:180px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== COMMERCIAL POTENTIAL ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>Commercial Potential</span>
+        <span class="pts" id="sectionTotal">— / 30</span>
+      </div>
+      <div class="section-body">
+
+        <!-- Category 1: Superior Features / Cost-Effectiveness -->
+        <div class="score-category">
+          <div class="cat-top">
+            <div class="cat-title">Superior Features / Cost-Effectiveness</div>
+            <div class="cat-score-display empty" id="display_features">—</div>
+          </div>
+          <div class="score-slider-row">
+            <input type="range" id="slider_features" min="0" max="10" step="1" value="0"
+                   oninput="syncSlider('features')">
+            <input type="number" class="score-num-input field" id="input_features"
+                   min="0" max="10" step="1" placeholder="—"
+                   oninput="syncInput('features')">
+          </div>
+          <div class="score-bar-bg"><div class="score-bar-fill" id="bar_features" style="width:0%"></div></div>
+          <div class="scoring-guide">
+            <h4>Scoring Guide</h4>
+            <div class="guide-row"><span class="guide-score">10</span><span class="guide-desc">Many features at appropriate/lower costs compared to gold standard</span></div>
+            <div class="guide-row"><span class="guide-score">5</span><span class="guide-desc">Some features at neutral costs but without gold standard data</span></div>
+            <div class="guide-row"><span class="guide-score">1</span><span class="guide-desc">Few features at neutral or increased costs</span></div>
+          </div>
+        </div>
+
+        <!-- Category 2: Competing Alternatives and Market Fit -->
+        <div class="score-category">
+          <div class="cat-top">
+            <div class="cat-title">Competing Alternatives &amp; Market Fit</div>
+            <div class="cat-score-display empty" id="display_market">—</div>
+          </div>
+          <div class="score-slider-row">
+            <input type="range" id="slider_market" min="0" max="10" step="1" value="0"
+                   oninput="syncSlider('market')">
+            <input type="number" class="score-num-input field" id="input_market"
+                   min="0" max="10" step="1" placeholder="—"
+                   oninput="syncInput('market')">
+          </div>
+          <div class="score-bar-bg"><div class="score-bar-fill" id="bar_market" style="width:0%"></div></div>
+          <div class="scoring-guide">
+            <h4>Scoring Guide</h4>
+            <div class="guide-row"><span class="guide-score">10</span><span class="guide-desc">Absent of competition with clear market fit</span></div>
+            <div class="guide-row"><span class="guide-score">5 – 6</span><span class="guide-desc">No clear market leader and demonstrated need</span></div>
+            <div class="guide-row"><span class="guide-score">3 – 4</span><span class="guide-desc">Crowded market</span></div>
+            <div class="guide-row"><span class="guide-score">1</span><span class="guide-desc">Clear market leader and/or questionable market fit</span></div>
+          </div>
+        </div>
+
+        <!-- Category 3: Stage and Development Plan -->
+        <div class="score-category">
+          <div class="cat-top">
+            <div class="cat-title">Stage &amp; Development Plan</div>
+            <div class="cat-score-display empty" id="display_stage">—</div>
+          </div>
+          <div class="score-slider-row">
+            <input type="range" id="slider_stage" min="0" max="10" step="1" value="0"
+                   oninput="syncSlider('stage')">
+            <input type="number" class="score-num-input field" id="input_stage"
+                   min="0" max="10" step="1" placeholder="—"
+                   oninput="syncInput('stage')">
+          </div>
+          <div class="score-bar-bg"><div class="score-bar-fill" id="bar_stage" style="width:0%"></div></div>
+          <div class="scoring-guide">
+            <h4>Scoring Guide</h4>
+            <div class="guide-row"><span class="guide-score">10</span><span class="guide-desc">Prototype with clear development plan</span></div>
+            <div class="guide-row"><span class="guide-score">7 – 8</span><span class="guide-desc">Animal studies</span></div>
+            <div class="guide-row"><span class="guide-score">3 – 4</span><span class="guide-desc">Some reduction to practice</span></div>
+            <div class="guide-row"><span class="guide-score">1</span><span class="guide-desc">Concept only with no clear development plan</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== LIVE TOTAL ===== -->
+    <div class="live-total" id="liveTotal">
+      <div class="total-label">TOTAL SCORE</div>
+      <div class="total-score" id="totalDisplay" style="color:#aaa;">—</div>
+      <div class="total-max">out of 30</div>
+      <div class="threshold-note">20+ advances to Non-Provisional</div>
+    </div>
+
+    <!-- ===== DECISION BOX ===== -->
+    <div class="decision-box pending" id="decisionBox">
+      <h3 id="decisionTitle">AWAITING SCORES</h3>
+      <div class="decision-action" id="decisionAction">Score all three categories above to generate a recommendation.</div>
+      <div class="decision-detail" id="decisionDetail"></div>
+    </div>
+
+    <!-- ===== PROGRESS & PROGRAM PARTICIPATION ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>Progress &amp; Program Participation</span>
+      </div>
+      <div class="section-body padded">
+        <div class="section-guidance">
+          Summarize any progress made (technical developments) and program participation (I-Corps, PPOC, etc.) that advanced this technology.
+        </div>
+        <div class="field">
+          <textarea rows="6" placeholder="Describe technical developments since initial triage, grant milestones achieved, program participation (I-Corps, Proof of Concept, SBIR/STTR), industry engagement, prototype progress, key data generated…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SIGNATURE ===== -->
+    <div class="sig-block">
+      <h4>Reviewer Information</h4>
+      <div class="sig-fields">
+        <div class="field"><label>Reviewer</label><input type="text" placeholder="Full name"></div>
+        <div class="field"><label>Date</label><input type="date"></div>
+        <div class="field"><label>Time Spent (hrs)</label><input type="text" placeholder="e.g. 2.0"></div>
+      </div>
+      <div class="field notes-field">
+        <label>Additional Notes</label>
+        <textarea placeholder="Observations, concerns, additional context…"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Tulane University Innovation Institute &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Non-Provisional Scoring
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   SLIDER / INPUT SYNC & SCORING
+   ============================================================ */
+const categories = ['features', 'market', 'stage'];
+const scores = { features: null, market: null, stage: null };
+
+function syncSlider(cat) {
+  const slider = document.getElementById('slider_' + cat);
+  const input  = document.getElementById('input_' + cat);
+  input.value = slider.value;
+  scores[cat] = parseInt(slider.value);
+  updateDisplay(cat);
+  recalc();
+}
+
+function syncInput(cat) {
+  const input  = document.getElementById('input_' + cat);
+  const slider = document.getElementById('slider_' + cat);
+  let val = input.value;
+
+  if (val === '') {
+    scores[cat] = null;
+    slider.value = 0;
+    updateDisplay(cat);
+    recalc();
+    return;
+  }
+
+  val = Math.max(0, Math.min(10, parseInt(val) || 0));
+  scores[cat] = val;
+  slider.value = val;
+  updateDisplay(cat);
+  recalc();
+}
+
+function updateDisplay(cat) {
+  const display = document.getElementById('display_' + cat);
+  const bar     = document.getElementById('bar_' + cat);
+
+  if (scores[cat] === null) {
+    display.textContent = '—';
+    display.classList.add('empty');
+    bar.style.width = '0%';
+  } else {
+    display.textContent = scores[cat] + ' / 10';
+    display.classList.remove('empty');
+    bar.style.width = (scores[cat] * 10) + '%';
+
+    if (scores[cat] >= 7) bar.style.background = 'var(--advance-green)';
+    else if (scores[cat] >= 4) bar.style.background = 'var(--main-dark)';
+    else bar.style.background = 'var(--nogo-red)';
+  }
+}
+
+function recalc() {
+  const totalEl   = document.getElementById('totalDisplay');
+  const sectionEl = document.getElementById('sectionTotal');
+  const box       = document.getElementById('decisionBox');
+  const title     = document.getElementById('decisionTitle');
+  const action    = document.getElementById('decisionAction');
+  const detail    = document.getElementById('decisionDetail');
+
+  const answered = categories.filter(c => scores[c] !== null);
+  const partial  = answered.length > 0 && answered.length < 3;
+
+  if (answered.length === 0) {
+    totalEl.textContent = '—';
+    totalEl.style.color = '#aaa';
+    sectionEl.textContent = '— / 30';
+    box.className = 'decision-box pending';
+    title.textContent = 'AWAITING SCORES';
+    action.textContent = 'Score all three categories above to generate a recommendation.';
+    detail.textContent = '';
+    return;
+  }
+
+  const total = categories.reduce((sum, c) => sum + (scores[c] || 0), 0);
+  totalEl.textContent = total;
+  sectionEl.textContent = total + ' / 30';
+
+  if (partial) {
+    totalEl.style.color = '#aaa';
+    box.className = 'decision-box pending';
+    title.textContent = 'SCORING IN PROGRESS';
+    action.textContent = `${answered.length} of 3 categories scored — complete all to generate recommendation.`;
+    detail.textContent = '';
+    return;
+  }
+
+  if (total >= 20) {
+    totalEl.style.color = 'var(--advance-green)';
+    box.className = 'decision-box advance';
+    title.textContent = 'ADVANCE TO NON-PROVISIONAL';
+    action.textContent = 'Score of ' + total + ' meets the threshold — proceed to non-provisional filing.';
+    detail.textContent = '';
+  } else {
+    totalEl.style.color = 'var(--nogo-red)';
+    box.className = 'decision-box nogo';
+    title.textContent = 'DOES NOT ADVANCE';
+    action.textContent = 'Score of ' + total + ' is below the 20-point threshold.';
+    detail.textContent = 'Consider maintaining provisional status, pursuing additional milestones, or releasing.';
+  }
+}
+
+/* ============================================================
+   PDF DOWNLOAD
+   ============================================================ */
+function downloadPDF() {
+  const btn = document.getElementById('dlBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  document.getElementById('toolbar').style.display = 'none';
+
+  const el = document.getElementById('formContent');
+  const opt = {
+    margin:       [0.25, 0.35, 0.25, 0.35],
+    filename:     'NonProvisional_Scoring.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, logging: false },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+    pagebreak:    { mode: ['avoid-all'] }
+  };
+
+  html2pdf().set(opt).from(el).save().then(() => {
+    document.getElementById('toolbar').style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Download as PDF';
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Dive Patent Search — Tulane OIP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --tulane-blue: #005587;
+    --tulane-blue-light: #E8F1F8;
+    --tulane-blue-mid: #3A8FCD;
+    --go-green: #2E7D32;
+    --go-green-bg: #E8F5E9;
+    --conditional-amber: #E65100;
+    --conditional-amber-bg: #FFF3E0;
+    --nogo-red: #C62828;
+    --nogo-red-bg: #FFEBEE;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #E0E0E0;
+    --gray-700: #333333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #EAEFF3;
+    color: var(--gray-700);
+    line-height: 1.5;
+  }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--tulane-blue);
+    padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .toolbar span { color: white; font-weight: 600; font-size: 14px; }
+  .toolbar button {
+    background: white; color: var(--tulane-blue); border: none;
+    padding: 10px 22px; border-radius: 6px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: background .15s;
+  }
+  .toolbar button:hover { background: #e0e0e0; }
+  .toolbar button:disabled { opacity: .6; cursor: wait; }
+
+  /* ---- Form wrapper ---- */
+  .form-wrapper {
+    max-width: 850px; margin: 30px auto; background: white;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    background: var(--tulane-blue);
+    padding: 28px 32px 20px; text-align: center; color: white;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header h2 { font-size: 14px; font-weight: 500; opacity: .85; }
+  .header .formula {
+    margin-top: 8px; padding: 6px 16px;
+    background: rgba(255,255,255,.15); border-radius: 4px;
+    display: inline-block; font-size: 12px; font-weight: 500;
+    letter-spacing: .3px; font-family: 'Courier New', monospace;
+  }
+
+  .body-content { padding: 24px 32px 32px; }
+
+  /* ---- Invention info ---- */
+  .invention-info {
+    background: var(--tulane-blue-light); border: 1px solid #B8D4E8;
+    border-radius: 6px; padding: 16px 18px; margin-bottom: 24px;
+  }
+  .inv-fields {
+    display: grid; grid-template-columns: 1fr 2fr 1.2fr; gap: 14px;
+  }
+
+  /* ---- Fields ---- */
+  .field label {
+    display: block; font-size: 11px; font-weight: 600; color: #666;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--gray-200);
+    border-radius: 4px; font-size: 14px; font-family: inherit;
+    background: var(--gray-50); transition: border-color .15s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none; border-color: var(--tulane-blue);
+    box-shadow: 0 0 0 2px rgba(0,85,135,.12);
+  }
+
+  /* ---- Section ---- */
+  .section { margin-bottom: 24px; }
+  .section-header {
+    background: var(--tulane-blue); color: white;
+    padding: 10px 16px; border-radius: 5px 5px 0 0;
+    font-weight: 600; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-header .pts {
+    background: rgba(255,255,255,.2); padding: 2px 10px;
+    border-radius: 3px; font-size: 12px; font-weight: 500;
+  }
+  .section-body {
+    border: 1px solid var(--gray-200); border-top: none;
+    border-radius: 0 0 5px 5px; padding: 16px;
+  }
+
+  /* ---- Score table / radio cards ---- */
+  .score-table { width: 100%; border-collapse: collapse; }
+  .score-table th {
+    text-align: left; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .5px; color: #888; padding: 6px 10px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  .score-table td {
+    padding: 10px; border-bottom: 1px solid var(--gray-100);
+    font-size: 13px; vertical-align: middle;
+  }
+  .score-table tr { cursor: pointer; transition: background .1s; }
+  .score-table tbody tr:hover { background: var(--tulane-blue-light); }
+  .score-table tbody tr.selected {
+    background: var(--tulane-blue-light);
+    outline: 2px solid var(--tulane-blue);
+    outline-offset: -2px;
+    border-radius: 3px;
+  }
+  .score-table input[type="radio"] {
+    width: 16px; height: 16px; accent-color: var(--tulane-blue); cursor: pointer;
+  }
+  .score-range { font-weight: 700; color: var(--tulane-blue); white-space: nowrap; }
+  .innovation-level { font-weight: 600; }
+
+  /* Novelty risk colors */
+  .risk-clear      { color: var(--go-green); font-weight: 600; }
+  .risk-low        { color: #558B2F; font-weight: 600; }
+  .risk-moderate   { color: var(--conditional-amber); font-weight: 600; }
+  .risk-high       { color: #D84315; font-weight: 600; }
+  .risk-blocking   { color: var(--nogo-red); font-weight: 600; }
+
+  /* ---- Strategic sub-scores ---- */
+  .strategic-items { display: flex; flex-direction: column; gap: 14px; }
+  .strat-item {
+    display: grid; grid-template-columns: 1fr auto; gap: 12px;
+    align-items: start; padding: 10px 12px;
+    background: var(--gray-50); border-radius: 5px; border: 1px solid var(--gray-200);
+  }
+  .strat-item .strat-label { font-size: 13px; font-weight: 600; }
+  .strat-item .strat-desc { font-size: 12px; color: #666; margin-top: 2px; }
+  .strat-item select {
+    width: 70px; text-align: center; font-weight: 600;
+    padding: 6px 4px; font-size: 14px;
+  }
+
+  /* ---- Live score display ---- */
+  .live-score {
+    background: var(--gray-100); border: 1px solid var(--gray-200);
+    border-radius: 6px; padding: 16px 20px; margin: 24px 0;
+    text-align: center;
+  }
+  .live-score .formula-display {
+    font-family: 'Courier New', monospace; font-size: 15px;
+    color: var(--tulane-blue); font-weight: 600; margin-bottom: 8px;
+  }
+  .live-score .total-score {
+    font-size: 42px; font-weight: 800; line-height: 1;
+    margin: 8px 0;
+  }
+  .live-score .total-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: #888; font-weight: 600;
+  }
+
+  /* ---- Decision box ---- */
+  .decision-box {
+    border-radius: 8px; padding: 20px 24px; text-align: center;
+    margin: 24px 0; border: 2.5px solid var(--gray-200);
+    transition: all .3s;
+  }
+  .decision-box h3 {
+    font-size: 18px; margin-bottom: 10px;
+  }
+  .decision-box.go     { border-color: var(--go-green); background: var(--go-green-bg); }
+  .decision-box.go h3  { color: var(--go-green); }
+  .decision-box.cond   { border-color: var(--conditional-amber); background: var(--conditional-amber-bg); }
+  .decision-box.cond h3 { color: var(--conditional-amber); }
+  .decision-box.nogo   { border-color: var(--nogo-red); background: var(--nogo-red-bg); }
+  .decision-box.nogo h3 { color: var(--nogo-red); }
+  .decision-box.pending { border-color: var(--gray-200); background: var(--gray-100); }
+  .decision-box.pending h3 { color: #888; }
+
+  .decision-action {
+    font-size: 14px; font-weight: 600; margin-top: 4px;
+  }
+  .decision-detail {
+    font-size: 12px; color: #666; margin-top: 6px; line-height: 1.5;
+  }
+
+  /* Conditional requirements */
+  .cond-requirements {
+    text-align: left; margin-top: 12px; padding: 12px 16px;
+    background: rgba(230,81,0,.06); border-radius: 5px; border: 1px solid #FFCC80;
+    font-size: 12px; display: none;
+  }
+  .cond-requirements.show { display: block; }
+  .cond-requirements h4 { font-size: 12px; color: var(--conditional-amber); margin-bottom: 6px; }
+  .cond-requirements ul { padding-left: 18px; color: #555; }
+  .cond-requirements li { margin-bottom: 3px; }
+
+  /* ---- Score threshold legend ---- */
+  .thresholds {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-bottom: 20px;
+  }
+  .thresh-item {
+    text-align: center; padding: 8px; border-radius: 5px;
+    font-size: 12px; font-weight: 600;
+  }
+  .thresh-go   { background: var(--go-green-bg); color: var(--go-green); border: 1px solid #A5D6A7; }
+  .thresh-cond { background: var(--conditional-amber-bg); color: var(--conditional-amber); border: 1px solid #FFCC80; }
+  .thresh-nogo { background: var(--nogo-red-bg); color: var(--nogo-red); border: 1px solid #EF9A9A; }
+
+  /* ---- Signature ---- */
+  .sig-block {
+    border-top: 1px solid var(--gray-200); padding-top: 16px; margin-top: 16px;
+  }
+  .sig-block h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .sig-fields {
+    display: grid; grid-template-columns: 2fr 1.2fr 1fr; gap: 14px;
+  }
+  .notes-field { margin-top: 14px; }
+  .notes-field textarea { min-height: 80px; resize: vertical; }
+
+  /* ---- Footer ---- */
+  .footer {
+    background: var(--tulane-blue); color: white;
+    text-align: center; padding: 10px; font-size: 10px; opacity: .85;
+  }
+
+  /* ---- Print ---- */
+  @media print {
+    body { background: white; }
+    .toolbar { display: none !important; }
+    .form-wrapper { box-shadow: none; border-radius: 0; margin: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <span>Tulane OIP — Deep Dive Patent Search</span>
+  <button onclick="downloadPDF()" id="dlBtn">Download as PDF</button>
+</div>
+
+<div class="form-wrapper" id="formContent">
+
+  <div class="header">
+    <h1>Tulane Office of Intellectual Property</h1>
+    <h2>Deep Dive Patent Search</h2>
+    <div class="formula">(Patentability Score &times; Novelty Multiplier) + Strategic Bonus</div>
+  </div>
+
+  <div class="body-content">
+
+    <!-- INVENTION INFO -->
+    <div class="invention-info">
+      <div class="inv-fields">
+        <div class="field"><label>Invention Track Code</label><input type="text" placeholder="e.g. TU-2026-001"></div>
+        <div class="field"><label>Invention Title</label><input type="text" placeholder="Title of the invention"></div>
+        <div class="field"><label>Lead PI</label><input type="text" placeholder="Principal Investigator name"></div>
+      </div>
+    </div>
+
+    <!-- SCORE THRESHOLDS LEGEND -->
+    <div class="thresholds">
+      <div class="thresh-item thresh-go">10+ &nbsp;→&nbsp; GO</div>
+      <div class="thresh-item thresh-cond">6 – 9 &nbsp;→&nbsp; CONDITIONAL GO</div>
+      <div class="thresh-item thresh-nogo">&lt; 6 &nbsp;→&nbsp; NO-GO</div>
+    </div>
+
+    <!-- ===== SECTION 1: Core Patentability ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>1. Core Patentability Score</span>
+        <span class="pts">0 – 15 points</span>
+      </div>
+      <div class="section-body">
+        <table class="score-table">
+          <thead>
+            <tr><th></th><th>Score</th><th>Innovation Level</th><th>Claim Scope</th><th>Examples</th></tr>
+          </thead>
+          <tbody id="patentabilityTable">
+            <tr onclick="selectRow(this,'patentability','14')">
+              <td><input type="radio" name="patentability" value="14"></td>
+              <td class="score-range">13 – 15</td>
+              <td class="innovation-level">Breakthrough</td>
+              <td>System / platform level</td>
+              <td>New device category, novel MOA</td>
+            </tr>
+            <tr onclick="selectRow(this,'patentability','11')">
+              <td><input type="radio" name="patentability" value="11"></td>
+              <td class="score-range">10 – 12</td>
+              <td class="innovation-level">Significant</td>
+              <td>Product / subsystem level</td>
+              <td>Major improvement, new approach</td>
+            </tr>
+            <tr onclick="selectRow(this,'patentability','8')">
+              <td><input type="radio" name="patentability" value="8"></td>
+              <td class="score-range">7 – 9</td>
+              <td class="innovation-level">Incremental</td>
+              <td>Component level</td>
+              <td>Optimization, modest enhancement</td>
+            </tr>
+            <tr onclick="selectRow(this,'patentability','5')">
+              <td><input type="radio" name="patentability" value="5"></td>
+              <td class="score-range">4 – 6</td>
+              <td class="innovation-level">Minor</td>
+              <td>Feature level</td>
+              <td>Small modification, limited scope</td>
+            </tr>
+            <tr onclick="selectRow(this,'patentability','2')">
+              <td><input type="radio" name="patentability" value="2"></td>
+              <td class="score-range">1 – 3</td>
+              <td class="innovation-level">Marginal</td>
+              <td>Narrow / specific</td>
+              <td>Very limited improvement</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;">
+          <div class="field" style="max-width:200px;">
+            <label>Exact Score (within range)</label>
+            <input type="number" id="patentabilityExact" min="0" max="15" step="1" placeholder="—" oninput="recalc()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 2: Novelty Risk ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>2. Novelty Risk Assessment</span>
+        <span class="pts">Multiplier: 0 – 1.0</span>
+      </div>
+      <div class="section-body">
+        <table class="score-table">
+          <thead>
+            <tr><th></th><th>Risk Level</th><th>Multiplier</th><th>Description</th><th>Action Required</th></tr>
+          </thead>
+          <tbody id="noveltyTable">
+            <tr onclick="selectRow(this,'novelty','1.0')">
+              <td><input type="radio" name="novelty" value="1.0"></td>
+              <td class="risk-clear">Clear</td>
+              <td class="score-range">1.0</td>
+              <td>No concerning prior art found</td>
+              <td>Proceed</td>
+            </tr>
+            <tr onclick="selectRow(this,'novelty','0.85')">
+              <td><input type="radio" name="novelty" value="0.85"></td>
+              <td class="risk-low">Low-Moderate</td>
+              <td class="score-range">0.85</td>
+              <td>Distant prior art, clear distinguishing features</td>
+              <td>Minor claim adjustments</td>
+            </tr>
+            <tr onclick="selectRow(this,'novelty','0.7')">
+              <td><input type="radio" name="novelty" value="0.7"></td>
+              <td class="risk-moderate">Moderate</td>
+              <td class="score-range">0.7</td>
+              <td>Some similar art, distinguishable with effort</td>
+              <td>Additional search / analysis</td>
+            </tr>
+            <tr onclick="selectRow(this,'novelty','0.4')">
+              <td><input type="radio" name="novelty" value="0.4"></td>
+              <td class="risk-high">High</td>
+              <td class="score-range">0.4</td>
+              <td>Close prior art, narrow claims likely</td>
+              <td>Extensive development needed</td>
+            </tr>
+            <tr onclick="selectRow(this,'novelty','0')">
+              <td><input type="radio" name="novelty" value="0"></td>
+              <td class="risk-blocking">Blocking</td>
+              <td class="score-range">0.0</td>
+              <td>102(a)/102(b) bar, loss of rights</td>
+              <td>Stop / abandon</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 3: Strategic Value Bonus ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>3. Strategic Value Bonus</span>
+        <span class="pts">0 – 5 points</span>
+      </div>
+      <div class="section-body">
+        <div class="strategic-items">
+          <div class="strat-item">
+            <div>
+              <div class="strat-label">Sponsored Research Value (0 – 2)</div>
+              <div class="strat-desc">Technology attracts industry funding for continued research or creates compelling basis for new sponsored programs</div>
+            </div>
+            <div class="field">
+              <select id="strat_sponsored" onchange="recalc()">
+                <option value="">—</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+              </select>
+            </div>
+          </div>
+          <div class="strat-item">
+            <div>
+              <div class="strat-label">Corporate Licensing Appeal (0 – 2)</div>
+              <div class="strat-desc">Strong commercial potential for licensing to established companies with clear value proposition and broad market applicability</div>
+            </div>
+            <div class="field">
+              <select id="strat_licensing" onchange="recalc()">
+                <option value="">—</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+              </select>
+            </div>
+          </div>
+          <div class="strat-item">
+            <div>
+              <div class="strat-label">Startup / Spin-out Opportunity (0 – 1)</div>
+              <div class="strat-desc">Core technology platform capable of supporting viable company formation with defensible market position</div>
+            </div>
+            <div class="field">
+              <select id="strat_startup" onchange="recalc()">
+                <option value="">—</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LIVE SCORE ===== -->
+    <div class="live-score" id="liveScore">
+      <div class="total-label">TOTAL SCORE</div>
+      <div class="formula-display" id="formulaDisplay">( — &times; — ) + — = —</div>
+      <div class="total-score" id="totalDisplay" style="color:#aaa;">—</div>
+    </div>
+
+    <!-- ===== DECISION BOX ===== -->
+    <div class="decision-box pending" id="decisionBox">
+      <h3 id="decisionTitle">AWAITING SCORES</h3>
+      <div class="decision-action" id="decisionAction">Complete all three sections above to generate a decision.</div>
+      <div class="decision-detail" id="decisionDetail"></div>
+      <div class="cond-requirements" id="condReqs">
+        <h4>Conditional GO Requirements:</h4>
+        <ul>
+          <li>Specific technical/data milestones must be met within 6 months</li>
+          <li>Reassessment required before non-provisional filing</li>
+          <li>Enhanced prior art monitoring</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SIGNATURE BLOCK -->
+    <div class="sig-block">
+      <h4>Reviewer Information</h4>
+      <div class="sig-fields">
+        <div class="field"><label>Reviewer</label><input type="text" placeholder="Full name"></div>
+        <div class="field"><label>Date</label><input type="date"></div>
+        <div class="field"><label>Time Spent (hrs)</label><input type="text" placeholder="e.g. 3.0"></div>
+      </div>
+      <div class="field notes-field">
+        <label>Notes / Comments</label>
+        <textarea placeholder="Prior art references, claim strategy notes, milestone conditions…"></textarea>
+      </div>
+    </div>
+
+  </div><!-- /body-content -->
+
+  <div class="footer">
+    Tulane Office of Intellectual Property &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Deep Dive Patent Search
+  </div>
+
+</div><!-- /form-wrapper -->
+
+<script>
+/* ============================================================
+   ROW SELECTION & SCORING
+   ============================================================ */
+
+function selectRow(tr, radioName, value) {
+  // Select the radio
+  const radio = tr.querySelector('input[type="radio"]');
+  radio.checked = true;
+
+  // Highlight selected row
+  const tbody = tr.closest('tbody');
+  tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+  tr.classList.add('selected');
+
+  // For patentability, pre-fill the midpoint of the range
+  if (radioName === 'patentability') {
+    document.getElementById('patentabilityExact').value = value;
+  }
+
+  recalc();
+}
+
+function getPatentabilityScore() {
+  const exact = document.getElementById('patentabilityExact').value;
+  if (exact !== '') return parseFloat(exact);
+  const checked = document.querySelector('input[name="patentability"]:checked');
+  return checked ? parseFloat(checked.value) : null;
+}
+
+function getNoveltyMultiplier() {
+  const checked = document.querySelector('input[name="novelty"]:checked');
+  return checked ? parseFloat(checked.value) : null;
+}
+
+function getStrategicBonus() {
+  const s1 = document.getElementById('strat_sponsored').value;
+  const s2 = document.getElementById('strat_licensing').value;
+  const s3 = document.getElementById('strat_startup').value;
+  if (s1 === '' && s2 === '' && s3 === '') return null;
+  return (s1 !== '' ? parseInt(s1) : 0)
+       + (s2 !== '' ? parseInt(s2) : 0)
+       + (s3 !== '' ? parseInt(s3) : 0);
+}
+
+function recalc() {
+  const P = getPatentabilityScore();
+  const N = getNoveltyMultiplier();
+  const S = getStrategicBonus();
+
+  const formulaEl = document.getElementById('formulaDisplay');
+  const totalEl   = document.getElementById('totalDisplay');
+  const box       = document.getElementById('decisionBox');
+  const title     = document.getElementById('decisionTitle');
+  const action    = document.getElementById('decisionAction');
+  const detail    = document.getElementById('decisionDetail');
+  const condReqs  = document.getElementById('condReqs');
+
+  const pStr = P !== null ? P : '—';
+  const nStr = N !== null ? N.toFixed(2) : '—';
+  const sStr = S !== null ? S : '—';
+
+  if (P !== null && N !== null && S !== null) {
+    const raw = (P * N) + S;
+    const total = Math.round(raw * 10) / 10; // one decimal
+
+    formulaEl.textContent = `( ${P} × ${N.toFixed(2)} ) + ${S} = ${total.toFixed(1)}`;
+
+    totalEl.textContent = total.toFixed(1);
+
+    // Remove old classes
+    box.className = 'decision-box';
+    condReqs.classList.remove('show');
+
+    if (total >= 10) {
+      box.classList.add('go');
+      title.textContent = 'GO';
+      totalEl.style.color = 'var(--go-green)';
+      action.textContent = 'File provisional — proceed with confidence';
+      detail.textContent = '';
+    } else if (total >= 6) {
+      box.classList.add('cond');
+      title.textContent = 'CONDITIONAL GO';
+      totalEl.style.color = 'var(--conditional-amber)';
+      action.textContent = 'File provisional — requires development milestones';
+      detail.textContent = '';
+      condReqs.classList.add('show');
+    } else {
+      box.classList.add('nogo');
+      title.textContent = 'NO-GO';
+      totalEl.style.color = 'var(--nogo-red)';
+      action.textContent = 'Release / abandon';
+      detail.textContent = '';
+    }
+  } else {
+    // Partial — show what we have
+    formulaEl.textContent = `( ${pStr} × ${nStr} ) + ${sStr} = —`;
+    totalEl.textContent = '—';
+    totalEl.style.color = '#aaa';
+    box.className = 'decision-box pending';
+    title.textContent = 'AWAITING SCORES';
+    action.textContent = 'Complete all three sections above to generate a decision.';
+    detail.textContent = '';
+    condReqs.classList.remove('show');
+  }
+}
+
+/* ============================================================
+   PDF DOWNLOAD
+   ============================================================ */
+function downloadPDF() {
+  const btn = document.getElementById('dlBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  document.getElementById('toolbar').style.display = 'none';
+
+  const el = document.getElementById('formContent');
+  const opt = {
+    margin:       [0.25, 0.35, 0.25, 0.35],
+    filename:     'DeepDive_Patent_Search.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, logging: false },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+    pagebreak:    { mode: ['avoid-all'] }
+  };
+
+  html2pdf().set(opt).from(el).save().then(() => {
+    document.getElementById('toolbar').style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Download as PDF';
+  });
+}
+</script>
+</body>
+</html>

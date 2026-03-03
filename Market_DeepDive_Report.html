@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Deep Dive Report — Tulane OIPM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --tulane-blue: #005587;
+    --tulane-blue-light: #E8F1F8;
+    --tulane-blue-mid: #3A8FCD;
+    --go-green: #2E7D32;
+    --go-green-bg: #E8F5E9;
+    --nogo-red: #C62828;
+    --nogo-red-bg: #FFEBEE;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #E0E0E0;
+    --gray-300: #C0C0C0;
+    --gray-700: #333333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #EAEFF3; color: var(--gray-700); line-height: 1.5;
+  }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--tulane-blue); padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .toolbar span { color: white; font-weight: 600; font-size: 14px; }
+  .toolbar button {
+    background: white; color: var(--tulane-blue); border: none;
+    padding: 10px 22px; border-radius: 6px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: background .15s;
+  }
+  .toolbar button:hover { background: #e0e0e0; }
+  .toolbar button:disabled { opacity: .6; cursor: wait; }
+
+  /* ---- Form wrapper ---- */
+  .form-wrapper {
+    max-width: 900px; margin: 30px auto; background: white;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    background: var(--tulane-blue);
+    padding: 28px 32px 22px; text-align: center; color: white;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .header h2 { font-size: 15px; font-weight: 600; opacity: .95; margin-bottom: 2px; }
+  .header p  { font-size: 11px; opacity: .7; }
+
+  .body-content { padding: 24px 32px 32px; }
+
+  /* ---- Meta info grid ---- */
+  .meta-info {
+    background: var(--tulane-blue-light); border: 1px solid #B8D4E8;
+    border-radius: 6px; padding: 18px 20px; margin-bottom: 26px;
+  }
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 2fr; gap: 12px 20px;
+  }
+  .meta-grid.three-col {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  /* ---- Fields ---- */
+  .field label {
+    display: block; font-size: 11px; font-weight: 600; color: #555;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--gray-200);
+    border-radius: 4px; font-size: 14px; font-family: inherit;
+    background: white; transition: border-color .15s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none; border-color: var(--tulane-blue);
+    box-shadow: 0 0 0 2px rgba(0,85,135,.12);
+  }
+  .field textarea { resize: vertical; }
+
+  /* ---- Section ---- */
+  .section { margin-bottom: 28px; }
+  .section-header {
+    background: var(--tulane-blue); color: white;
+    padding: 10px 16px; border-radius: 5px 5px 0 0;
+    font-weight: 600; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-header .hint {
+    font-weight: 400; font-size: 11px; opacity: .75;
+  }
+  .section-body {
+    border: 1px solid var(--gray-200); border-top: none;
+    border-radius: 0 0 5px 5px; padding: 18px 16px;
+  }
+  .section-guidance {
+    font-size: 12px; color: #888; margin-bottom: 12px; line-height: 1.6;
+  }
+
+  /* ---- Market size grid ---- */
+  .market-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+    border: 1px solid var(--gray-200); border-radius: 5px; overflow: hidden;
+  }
+  .market-col {
+    border-right: 1px solid var(--gray-200);
+  }
+  .market-col:last-child { border-right: none; }
+  .market-col-header {
+    background: var(--tulane-blue); color: white;
+    padding: 8px 12px; font-weight: 700; font-size: 12px;
+    text-align: center; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .market-col-sub {
+    font-size: 10px; font-weight: 400; opacity: .8; display: block;
+    text-transform: none; letter-spacing: 0;
+  }
+  .market-row {
+    border-bottom: 1px solid var(--gray-200); padding: 12px;
+  }
+  .market-row:last-child { border-bottom: none; }
+  .market-row-label {
+    font-size: 11px; font-weight: 600; color: var(--tulane-blue);
+    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
+  }
+  .market-row-label .icon { margin-right: 4px; }
+  .market-row input, .market-row textarea {
+    width: 100%; padding: 7px 9px; border: 1px solid var(--gray-200);
+    border-radius: 4px; font-size: 13px; font-family: inherit;
+    background: var(--gray-50);
+  }
+  .market-row textarea { min-height: 60px; resize: vertical; }
+  .market-row input:focus, .market-row textarea:focus {
+    outline: none; border-color: var(--tulane-blue);
+    box-shadow: 0 0 0 2px rgba(0,85,135,.08);
+  }
+
+  /* ---- Competitor matrix ---- */
+  .matrix-wrapper { overflow-x: auto; }
+  .comp-matrix {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    min-width: 500px;
+  }
+  .comp-matrix th, .comp-matrix td {
+    border: 1px solid var(--gray-200); padding: 8px 10px;
+    text-align: center; vertical-align: middle;
+  }
+  .comp-matrix thead th {
+    background: var(--tulane-blue); color: white;
+    font-weight: 600; font-size: 12px; position: relative;
+  }
+  .comp-matrix thead th.tulane-col {
+    background: #003D5B;
+  }
+  .comp-matrix thead th input {
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    color: white; padding: 4px 6px; border-radius: 3px; width: 100%;
+    font-size: 12px; font-family: inherit; text-align: center;
+  }
+  .comp-matrix thead th input::placeholder { color: rgba(255,255,255,.5); }
+  .comp-matrix thead th input:focus {
+    outline: none; background: rgba(255,255,255,.25);
+  }
+  .comp-matrix tbody td:first-child {
+    text-align: left; font-weight: 600; background: var(--gray-50);
+  }
+  .comp-matrix tbody td:first-child input {
+    font-weight: 600; background: transparent; border: none;
+    padding: 2px 4px; width: 100%; font-size: 13px; font-family: inherit;
+  }
+  .comp-matrix tbody td:first-child input:focus { outline: none; }
+  .comp-matrix tbody td select {
+    border: 1px solid var(--gray-200); border-radius: 3px;
+    padding: 4px 6px; font-size: 12px; font-family: inherit;
+    background: white; cursor: pointer; width: 100%;
+  }
+  .comp-matrix tbody td.tulane-cell {
+    background: var(--tulane-blue-light);
+  }
+  .comp-matrix tbody td.tulane-cell select {
+    background: var(--tulane-blue-light);
+  }
+  .matrix-btns {
+    display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .btn-sm {
+    padding: 6px 14px; border-radius: 4px; font-size: 12px;
+    font-weight: 600; cursor: pointer; border: 1px solid var(--gray-200);
+    background: white; color: var(--gray-700); transition: all .15s;
+  }
+  .btn-sm:hover { background: var(--gray-100); }
+  .btn-sm.primary {
+    background: var(--tulane-blue); color: white; border-color: var(--tulane-blue);
+  }
+  .btn-sm.primary:hover { background: #004570; }
+  .btn-sm.danger { color: var(--nogo-red); border-color: #EF9A9A; }
+  .btn-sm.danger:hover { background: var(--nogo-red-bg); }
+
+  /* ---- Milestone tables ---- */
+  .milestone-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .milestone-table th {
+    background: var(--tulane-blue); color: white;
+    padding: 8px 12px; font-weight: 600; font-size: 12px;
+    text-align: left;
+  }
+  .milestone-table td {
+    border: 1px solid var(--gray-200); padding: 6px 8px;
+    vertical-align: top;
+  }
+  .milestone-table td input, .milestone-table td textarea {
+    width: 100%; border: none; background: transparent;
+    padding: 4px 2px; font-size: 13px; font-family: inherit;
+    resize: vertical;
+  }
+  .milestone-table td input:focus, .milestone-table td textarea:focus {
+    outline: none; background: var(--tulane-blue-light);
+    border-radius: 2px;
+  }
+  .milestone-table tbody tr:nth-child(even) { background: var(--gray-50); }
+  .milestone-table .row-num {
+    width: 30px; text-align: center; color: #aaa; font-weight: 600;
+    font-size: 12px;
+  }
+
+  /* ---- Recommendation banner ---- */
+  .rec-select {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .rec-select select {
+    font-weight: 700; font-size: 14px; padding: 8px 12px;
+  }
+
+  /* ---- Signature ---- */
+  .sig-block {
+    border-top: 1px solid var(--gray-200); padding-top: 16px; margin-top: 20px;
+  }
+  .sig-block h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .sig-fields {
+    display: grid; grid-template-columns: 2fr 1.2fr 1fr; gap: 14px;
+  }
+  .notes-field { margin-top: 14px; }
+  .notes-field textarea { min-height: 80px; }
+
+  /* ---- Footer ---- */
+  .footer {
+    background: var(--tulane-blue); color: white;
+    text-align: center; padding: 10px; font-size: 10px; opacity: .85;
+  }
+
+  @media print {
+    body { background: white; }
+    .toolbar { display: none !important; }
+    .form-wrapper { box-shadow: none; border-radius: 0; margin: 0; max-width: 100%; }
+    .btn-sm { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <span>Tulane OIPM — Marketing Deep Dive Report</span>
+  <button onclick="downloadPDF()" id="dlBtn">Download as PDF</button>
+</div>
+
+<div class="form-wrapper" id="formContent">
+
+  <div class="header">
+    <h1>Tulane OIPM</h1>
+    <h2>Marketing Deep Dive Report</h2>
+    <p>Complete within 60 days of disclosure receipt</p>
+  </div>
+
+  <div class="body-content">
+
+    <!-- ===== META INFO ===== -->
+    <div class="meta-info">
+      <div class="meta-grid" style="margin-bottom:12px;">
+        <div class="field"><label>ID Number</label><input type="text" placeholder="e.g. TU-2026-001"></div>
+        <div class="field"><label>Technology Name</label><input type="text" placeholder="Technology name"></div>
+      </div>
+      <div class="meta-grid three-col">
+        <div class="field"><label>PI / Lead Inventor</label><input type="text" placeholder="Name"></div>
+        <div class="field">
+          <label>Technology Readiness Level</label>
+          <select>
+            <option value="">Select TRL…</option>
+            <option value="1">TRL 1 — Basic principles observed</option>
+            <option value="2">TRL 2 — Technology concept formulated</option>
+            <option value="3">TRL 3 — Experimental proof of concept</option>
+            <option value="4">TRL 4 — Technology validated in lab</option>
+            <option value="5">TRL 5 — Technology validated in relevant environment</option>
+            <option value="6">TRL 6 — Technology demonstrated in relevant environment</option>
+            <option value="7">TRL 7 — System prototype demonstration</option>
+            <option value="8">TRL 8 — System complete and qualified</option>
+            <option value="9">TRL 9 — Actual system proven in operational environment</option>
+          </select>
+        </div>
+        <div class="field"><label>Date of Assessment</label><input type="date"></div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="field rec-select">
+          <label style="margin-bottom:0; margin-right:8px;">Recommended to Proceed</label>
+          <select style="max-width:160px;">
+            <option value="">Select…</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+            <option value="conditional">Conditional</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TECHNOLOGY SUMMARY ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>Technology Summary</span>
+        <span class="hint">5 sentences max</span>
+      </div>
+      <div class="section-body">
+        <div class="section-guidance">
+          End with a succinct explanation of the product. Include available resources for development (grant dollars, grad students, collaborators).
+        </div>
+        <div class="field">
+          <textarea rows="5" placeholder="Describe the technology, its intended application, and available development resources…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MARKET SIZE ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>Market Size</span>
+        <span class="hint">Segmented — be specific</span>
+      </div>
+      <div class="section-body" style="padding:0;">
+        <div class="section-guidance" style="padding:14px 16px 8px;">
+          Report in both dollars and end users. Segment more specifically than broad categories (e.g., "chemo-resistant breast cancer" rather than "breast cancer").
+        </div>
+        <div class="market-grid">
+          <!-- Column: TAM -->
+          <div class="market-col">
+            <div class="market-col-header">Total Addressable<br>Market (TAM)<span class="market-col-sub">Entire market demand</span></div>
+            <div class="market-row">
+              <div class="market-row-label"><span class="icon">$</span> Dollars</div>
+              <input type="text" placeholder="e.g. $2.4B">
+            </div>
+            <div class="market-row">
+              <div class="market-row-label">Customers</div>
+              <input type="text" placeholder="e.g. 450,000 patients/yr">
+            </div>
+            <div class="market-row">
+              <div class="market-row-label">Logic</div>
+              <textarea placeholder="How did you arrive at these values?"></textarea>
+            </div>
+          </div>
+          <!-- Column: SAM -->
+          <div class="market-col">
+            <div class="market-col-header">Serviceable Addressable<br>Market (SAM)<span class="market-col-sub">Reachable segment</span></div>
+            <div class="market-row">
+              <div class="market-row-label"><span class="icon">$</span> Dollars</div>
+              <input type="text" placeholder="e.g. $800M">
+            </div>
+            <div class="market-row">
+              <div class="market-row-label">Customers</div>
+              <input type="text" placeholder="e.g. 120,000 patients/yr">
+            </div>
+            <div class="market-row">
+              <div class="market-row-label">Logic</div>
+              <textarea placeholder="How did you arrive at these values?"></textarea>
+            </div>
+          </div>
+          <!-- Column: SOM -->
+          <div class="market-col">
+            <div class="market-col-header">Serviceable Obtainable<br>Market (SOM)<span class="market-col-sub">Realistic capture</span></div>
+            <div class="market-row">
+              <div class="market-row-label"><span class="icon">$</span> Dollars</div>
+              <input type="text" placeholder="e.g. $50M">
+            </div>
+            <div class="market-row">
+              <div class="market-row-label">Customers</div>
+              <input type="text" placeholder="e.g. 8,000 patients/yr">
+            </div>
+            <div class="market-row">
+              <div class="market-row-label">Logic</div>
+              <textarea placeholder="How did you arrive at these values?"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TECHNICAL COMPETITORS ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>Technical Competitors</span>
+        <span class="hint">Comparison matrix</span>
+      </div>
+      <div class="section-body">
+        <div class="section-guidance">
+          Include researchers and companies developing similar technologies or addressing the same problem. Note the market standard (standard of care). Highlight key differentiating features.
+        </div>
+        <div class="matrix-wrapper">
+          <table class="comp-matrix" id="compMatrix">
+            <thead>
+              <tr>
+                <th style="min-width:130px;">Feature</th>
+                <th class="tulane-col" style="min-width:120px;">Tulane Technology</th>
+                <th style="min-width:120px;"><input type="text" placeholder="Competitor 1"></th>
+                <th style="min-width:120px;"><input type="text" placeholder="Competitor 2"></th>
+                <th style="min-width:120px;"><input type="text" placeholder="Competitor 3"></th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody">
+              <tr>
+                <td><input type="text" placeholder="Feature 1"></td>
+                <td class="tulane-cell"><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+              </tr>
+              <tr>
+                <td><input type="text" placeholder="Feature 2"></td>
+                <td class="tulane-cell"><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+              </tr>
+              <tr>
+                <td><input type="text" placeholder="Feature 3"></td>
+                <td class="tulane-cell"><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+                <td><select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="matrix-btns">
+          <button class="btn-sm primary" onclick="addFeatureRow()">+ Add Feature Row</button>
+          <button class="btn-sm primary" onclick="addCompetitor()">+ Add Competitor</button>
+          <button class="btn-sm danger" onclick="removeLastFeatureRow()">- Remove Last Row</button>
+          <button class="btn-sm danger" onclick="removeLastCompetitor()">- Remove Last Competitor</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TECHNICAL MILESTONES ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>Technical Milestones &amp; Go/No-Go's</span>
+        <span class="hint">Next steps &amp; resources</span>
+      </div>
+      <div class="section-body">
+        <div class="section-guidance">What are obvious next steps for this technology and what resources are needed?</div>
+        <table class="milestone-table" id="techMilestones">
+          <thead>
+            <tr>
+              <th style="width:30px;">#</th>
+              <th style="width:22%;">Milestone</th>
+              <th>Description</th>
+              <th style="width:22%;">Resources Needed</th>
+              <th style="width:15%;">Timeline</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="row-num">1</td><td><input type="text" placeholder="Milestone"></td><td><input type="text" placeholder="Description"></td><td><input type="text" placeholder="Resources"></td><td><input type="text" placeholder="Timeline"></td></tr>
+            <tr><td class="row-num">2</td><td><input type="text" placeholder="Milestone"></td><td><input type="text" placeholder="Description"></td><td><input type="text" placeholder="Resources"></td><td><input type="text" placeholder="Timeline"></td></tr>
+            <tr><td class="row-num">3</td><td><input type="text" placeholder="Milestone"></td><td><input type="text" placeholder="Description"></td><td><input type="text" placeholder="Resources"></td><td><input type="text" placeholder="Timeline"></td></tr>
+          </tbody>
+        </table>
+        <div class="matrix-btns">
+          <button class="btn-sm primary" onclick="addMilestoneRow('techMilestones')">+ Add Row</button>
+          <button class="btn-sm danger" onclick="removeMilestoneRow('techMilestones')">- Remove Last</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== COMMERCIAL MILESTONES ===== -->
+    <div class="section">
+      <div class="section-header">
+        <span>Commercial Milestones &amp; Go/No-Go's</span>
+        <span class="hint">Next steps &amp; resources</span>
+      </div>
+      <div class="section-body">
+        <div class="section-guidance">What are obvious next steps for this venture and what resources are needed?</div>
+        <table class="milestone-table" id="commMilestones">
+          <thead>
+            <tr>
+              <th style="width:30px;">#</th>
+              <th style="width:22%;">Milestone</th>
+              <th>Description</th>
+              <th style="width:22%;">Resources Needed</th>
+              <th style="width:15%;">Timeline</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="row-num">1</td><td><input type="text" placeholder="Milestone"></td><td><input type="text" placeholder="Description"></td><td><input type="text" placeholder="Resources"></td><td><input type="text" placeholder="Timeline"></td></tr>
+            <tr><td class="row-num">2</td><td><input type="text" placeholder="Milestone"></td><td><input type="text" placeholder="Description"></td><td><input type="text" placeholder="Resources"></td><td><input type="text" placeholder="Timeline"></td></tr>
+            <tr><td class="row-num">3</td><td><input type="text" placeholder="Milestone"></td><td><input type="text" placeholder="Description"></td><td><input type="text" placeholder="Resources"></td><td><input type="text" placeholder="Timeline"></td></tr>
+          </tbody>
+        </table>
+        <div class="matrix-btns">
+          <button class="btn-sm primary" onclick="addMilestoneRow('commMilestones')">+ Add Row</button>
+          <button class="btn-sm danger" onclick="removeMilestoneRow('commMilestones')">- Remove Last</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SIGNATURE ===== -->
+    <div class="sig-block">
+      <h4>Reviewer Information</h4>
+      <div class="sig-fields">
+        <div class="field"><label>Reviewer</label><input type="text" placeholder="Full name"></div>
+        <div class="field"><label>Date</label><input type="date"></div>
+        <div class="field"><label>Time Spent (hrs)</label><input type="text" placeholder="e.g. 8.0"></div>
+      </div>
+      <div class="field notes-field">
+        <label>Additional Notes</label>
+        <textarea placeholder="Overall assessment, key risks, recommended next steps…"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Tulane OIPM &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Marketing Deep Dive Report
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   COMPETITOR MATRIX: add/remove rows and columns
+   ============================================================ */
+function getCompCount() {
+  return document.querySelector('#compMatrix thead tr').children.length - 2; // minus Feature col and Tulane col
+}
+
+function makeSelectHTML() {
+  return '<select><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="na">N/A</option></select>';
+}
+
+function addFeatureRow() {
+  const tbody = document.getElementById('matrixBody');
+  const colCount = document.querySelector('#compMatrix thead tr').children.length;
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td><input type="text" placeholder="Feature"></td>'
+    + '<td class="tulane-cell">' + makeSelectHTML() + '</td>'
+    + new Array(colCount - 2).fill('<td>' + makeSelectHTML() + '</td>').join('');
+  tbody.appendChild(tr);
+}
+
+function removeLastFeatureRow() {
+  const tbody = document.getElementById('matrixBody');
+  if (tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild);
+}
+
+function addCompetitor() {
+  const headerRow = document.querySelector('#compMatrix thead tr');
+  const th = document.createElement('th');
+  th.style.minWidth = '120px';
+  const num = getCompCount() + 1;
+  th.innerHTML = '<input type="text" placeholder="Competitor ' + num + '">';
+  headerRow.appendChild(th);
+
+  document.querySelectorAll('#matrixBody tr').forEach(tr => {
+    const td = document.createElement('td');
+    td.innerHTML = makeSelectHTML();
+    tr.appendChild(td);
+  });
+}
+
+function removeLastCompetitor() {
+  const headerRow = document.querySelector('#compMatrix thead tr');
+  if (headerRow.children.length > 3) { // keep at least Feature + Tulane + 1 competitor
+    headerRow.removeChild(headerRow.lastElementChild);
+    document.querySelectorAll('#matrixBody tr').forEach(tr => {
+      tr.removeChild(tr.lastElementChild);
+    });
+  }
+}
+
+/* ============================================================
+   MILESTONE TABLES: add/remove rows
+   ============================================================ */
+function addMilestoneRow(tableId) {
+  const tbody = document.querySelector('#' + tableId + ' tbody');
+  const num = tbody.children.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td class="row-num">' + num + '</td>'
+    + '<td><input type="text" placeholder="Milestone"></td>'
+    + '<td><input type="text" placeholder="Description"></td>'
+    + '<td><input type="text" placeholder="Resources"></td>'
+    + '<td><input type="text" placeholder="Timeline"></td>';
+  tbody.appendChild(tr);
+}
+
+function removeMilestoneRow(tableId) {
+  const tbody = document.querySelector('#' + tableId + ' tbody');
+  if (tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild);
+}
+
+/* ============================================================
+   PDF DOWNLOAD
+   ============================================================ */
+function downloadPDF() {
+  const btn = document.getElementById('dlBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  document.getElementById('toolbar').style.display = 'none';
+
+  // Hide add/remove buttons for clean PDF
+  document.querySelectorAll('.matrix-btns').forEach(el => el.style.display = 'none');
+
+  const el = document.getElementById('formContent');
+  const opt = {
+    margin:       [0.2, 0.3, 0.2, 0.3],
+    filename:     'Market_DeepDive_Report.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, logging: false },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy'], avoid: ['.section', '.meta-info', '.sig-block'] }
+  };
+
+  html2pdf().set(opt).from(el).save().then(() => {
+    document.getElementById('toolbar').style.display = '';
+    document.querySelectorAll('.matrix-btns').forEach(el => el.style.display = '');
+    btn.disabled = false;
+    btn.textContent = 'Download as PDF';
+  });
+}
+</script>
+</body>
+</html>
