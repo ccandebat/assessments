@@ -254,22 +254,13 @@
   }
 
   /* ---- PDF page-break helpers ---- */
-  .section {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-  .decision-box {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-  .sig-block {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-  .invention-info {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
+  /* NOTE: Do NOT put break-inside:avoid on .section — filled sections
+     can exceed remaining page space and cascade huge white gaps. */
+  .section-header { page-break-after: avoid; break-after: avoid; }
+  .decision-box   { page-break-inside: avoid; break-inside: avoid; }
+  .sig-block      { page-break-inside: avoid; break-inside: avoid; }
+  .invention-info { page-break-inside: avoid; break-inside: avoid; }
+  .pass-fail      { page-break-inside: avoid; break-inside: avoid; }
 
   /* ---- Print / PDF styles ---- */
   @media print {
@@ -490,7 +481,7 @@ function downloadPDF() {
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true, logging: false },
     jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-    pagebreak:    { mode: ['css'], avoid: ['.section', '.decision-box', '.sig-block', '.invention-info'] }
+    pagebreak:    { mode: ['css'], avoid: ['.decision-box', '.sig-block', '.invention-info', '.pass-fail'] }
   };
 
   html2pdf().set(opt).from(el).save().then(() => {
