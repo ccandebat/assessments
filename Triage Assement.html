@@ -257,10 +257,11 @@
     padding: 10px;
     font-size: 10px;
     opacity: .85;
-    border-radius: 0 0 8px 8px;
   }
 
   /* ---- PDF page-break helpers ---- */
+  /* NOTE: Do NOT put break-inside:avoid on .section — filled sections
+     can exceed remaining page space and cascade huge white gaps. */
   .section-header { page-break-after: avoid; break-after: avoid; }
   .decision-box   { page-break-inside: avoid; break-inside: avoid; }
   .sig-block      { page-break-inside: avoid; break-inside: avoid; }
@@ -414,10 +415,11 @@ function getResult(name) {
   const radios = document.querySelectorAll(`input[name="${name}"]`);
   for (const r of radios) {
     if (r.checked) {
+      // PASS is always the first radio, FAIL is the second
       return r.closest('.pass-opt') ? 'pass' : 'fail';
     }
   }
-  return null;
+  return null; // not yet answered
 }
 
 function updateDecision() {
@@ -432,23 +434,27 @@ function updateDecision() {
   const rowGo    = document.getElementById('decisionGo');
   const rowNogo  = document.getElementById('decisionNogo');
 
+  // Reset highlights
   rowGo.classList.remove('auto-selected');
   rowNogo.classList.remove('auto-selected');
   banner.className = 'auto-score-banner';
 
   if (anyFail) {
+    // Immediately set NO-GO
     radioNo.checked = true;
     radioGo.checked = false;
     rowNogo.classList.add('auto-selected');
     banner.textContent = 'Auto-scored: FAIL detected → NO-GO';
     banner.classList.add('show', 'nogo-banner');
   } else if (allPass) {
+    // All four sections are PASS → GO
     radioGo.checked = true;
     radioNo.checked = false;
     rowGo.classList.add('auto-selected');
     banner.textContent = 'Auto-scored: All sections PASS → GO';
     banner.classList.add('show', 'go-banner');
   } else if (answered > 0) {
+    // Some answered, none failed yet, not all complete
     radioGo.checked = false;
     radioNo.checked = false;
     banner.textContent = `${answered} of ${sectionNames.length} sections scored — awaiting remaining results`;
@@ -458,6 +464,7 @@ function updateDecision() {
   }
 }
 
+// Attach listeners to all PASS/FAIL radios
 document.querySelectorAll('.pass-fail input[type="radio"]').forEach(radio => {
   radio.addEventListener('change', updateDecision);
 });
@@ -477,21 +484,37 @@ function downloadPDF() {
   toolbar.style.display = 'none';
   wrapper.classList.add('pdf-mode');
 
-  // 2. Scroll to top so html2canvas captures from the beginning
+  // 2. Auto-expand all textareas so full content is visible for capture
+  const textareas = wrapper.querySelectorAll('textarea');
+  const origHeights = [];
+  textareas.forEach(function(ta) {
+    origHeights.push(ta.style.height);
+    ta.style.height = 'auto';
+    ta.style.height = Math.max(ta.scrollHeight, 80) + 'px';
+    ta.style.overflow = 'hidden';
+  });
+
+  // 3. Scroll to top
   window.scrollTo(0, 0);
 
-  // 3. Wait for browser to repaint before capturing
+  // 4. Wait for browser to repaint before capturing
   setTimeout(function() {
-    const opt = {
+    var fullHeight = wrapper.scrollHeight;
+    var opt = {
       margin:       [0.3, 0.4, 0.3, 0.4],
       filename:     'Initial_Triage_Checklist.pdf',
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowHeight: wrapper.scrollHeight },
+      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, height: fullHeight },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
       pagebreak:    { mode: ['css'], avoid: ['.decision-box', '.sig-block', '.invention-info', '.pass-fail'] }
     };
 
-    html2pdf().set(opt).from(wrapper).save().then(() => {
+    html2pdf().set(opt).from(wrapper).save().then(function() {
+      // Restore textarea heights
+      textareas.forEach(function(ta, i) {
+        ta.style.height = origHeights[i];
+        ta.style.overflow = '';
+      });
       wrapper.classList.remove('pdf-mode');
       toolbar.style.display = '';
       btn.disabled = false;
