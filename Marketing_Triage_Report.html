@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marketing Triage Report — Tulane OIP</title>
+<title>Marketing Triage Report — Tulane OIPM</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -233,6 +233,14 @@
     text-align: center; padding: 10px; font-size: 10px; opacity: .85;
   }
 
+  /* ---- PDF page-break helpers ---- */
+  .section { page-break-inside: avoid; break-inside: avoid; }
+  .score-category { page-break-inside: avoid; break-inside: avoid; }
+  .live-total { page-break-inside: avoid; break-inside: avoid; }
+  .decision-box { page-break-inside: avoid; break-inside: avoid; }
+  .sig-block { page-break-inside: avoid; break-inside: avoid; }
+  .invention-info { page-break-inside: avoid; break-inside: avoid; }
+
   /* ---- Print ---- */
   @media print {
     body { background: white; }
@@ -244,14 +252,14 @@
 <body>
 
 <div class="toolbar" id="toolbar">
-  <span>Tulane OIP — Marketing Triage Report</span>
+  <span>Tulane OIPM — Marketing Triage Report</span>
   <button onclick="downloadPDF()" id="dlBtn">Download as PDF</button>
 </div>
 
 <div class="form-wrapper" id="formContent">
 
   <div class="header">
-    <h1>Tulane Office of Intellectual Property</h1>
+    <h1>Tulane Office of Intellectual Property Management</h1>
     <h2>Marketing Triage Report</h2>
   </div>
 
@@ -377,7 +385,7 @@
   </div><!-- /body-content -->
 
   <div class="footer">
-    Tulane Office of Intellectual Property &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Marketing Triage Report
+    Tulane Office of Intellectual Property Management &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Marketing Triage Report
   </div>
 
 </div><!-- /form-wrapper -->
@@ -502,12 +510,12 @@ function downloadPDF() {
 
   const el = document.getElementById('formContent');
   const opt = {
-    margin:       [0.25, 0.35, 0.25, 0.35],
+    margin:       [0.4, 0.4, 0.4, 0.4],
     filename:     'Marketing_Triage_Report.pdf',
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true, logging: false },
     jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-    pagebreak:    { mode: ['avoid-all'] }
+    pagebreak:    { mode: ['css'], avoid: ['.score-category', '.live-total', '.decision-box', '.sig-block', '.invention-info'] }
   };
 
   html2pdf().set(opt).from(el).save().then(() => {
