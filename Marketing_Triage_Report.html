@@ -51,7 +51,7 @@
   /* ---- Form wrapper ---- */
   .form-wrapper {
     max-width: 850px; margin: 30px auto; background: white;
-    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12);
   }
 
   /* ---- Header ---- */
@@ -234,12 +234,36 @@
   }
 
   /* ---- PDF page-break helpers ---- */
-  .section { page-break-inside: avoid; break-inside: avoid; }
+  /* NOTE: Do NOT add page-break-inside:avoid to .section — it's too tall and causes huge white gaps */
   .score-category { page-break-inside: avoid; break-inside: avoid; }
   .live-total { page-break-inside: avoid; break-inside: avoid; }
   .decision-box { page-break-inside: avoid; break-inside: avoid; }
   .sig-block { page-break-inside: avoid; break-inside: avoid; }
   .invention-info { page-break-inside: avoid; break-inside: avoid; }
+
+  /* ---- Textarea mirror for PDF ---- */
+  .ta-mirror {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: var(--gray-50);
+    min-height: 80px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    box-sizing: border-box;
+  }
+
+  /* ---- PDF mode ---- */
+  .form-wrapper.pdf-mode {
+    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: none;
+  }
 
   /* ---- Print ---- */
   @media print {
@@ -503,26 +527,74 @@ function recalc() {
    PDF DOWNLOAD
    ============================================================ */
 function downloadPDF() {
-  const btn = document.getElementById('dlBtn');
+  var btn = document.getElementById('dlBtn');
   btn.disabled = true;
   btn.textContent = 'Generating…';
-  document.getElementById('toolbar').style.display = 'none';
 
-  const el = document.getElementById('formContent');
-  const opt = {
-    margin:       [0.4, 0.4, 0.4, 0.4],
-    filename:     'Marketing_Triage_Report.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, logging: false },
-    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-    pagebreak:    { mode: ['css'], avoid: ['.score-category', '.live-total', '.decision-box', '.sig-block', '.invention-info'] }
-  };
+  var toolbar = document.getElementById('toolbar');
+  var wrapper = document.getElementById('formContent');
 
-  html2pdf().set(opt).from(el).save().then(() => {
-    document.getElementById('toolbar').style.display = '';
-    btn.disabled = false;
-    btn.textContent = 'Download as PDF';
-  });
+  toolbar.style.display = 'none';
+  wrapper.classList.add('pdf-mode');
+
+  // Replace textareas with visible divs (html2canvas can't render textarea content properly)
+  var textareas = wrapper.querySelectorAll('textarea');
+  var taMirrors = [];
+  for (var i = 0; i < textareas.length; i++) {
+    var ta = textareas[i];
+    var mirror = document.createElement('div');
+    mirror.className = 'ta-mirror';
+    var val = ta.value;
+    if (val) {
+      mirror.textContent = val;
+    } else {
+      mirror.textContent = ta.placeholder;
+      mirror.style.color = '#999';
+    }
+    ta.style.display = 'none';
+    ta.parentNode.insertBefore(mirror, ta.nextSibling);
+    taMirrors.push(mirror);
+  }
+
+  // Sync input values to attributes so html2canvas can read them
+  var inputs = wrapper.querySelectorAll('input[type="text"], input[type="date"], input[type="number"]');
+  for (var i = 0; i < inputs.length; i++) {
+    inputs[i].setAttribute('value', inputs[i].value);
+  }
+
+  // Sync range slider values to attributes
+  var sliders = wrapper.querySelectorAll('input[type="range"]');
+  for (var i = 0; i < sliders.length; i++) {
+    sliders[i].setAttribute('value', sliders[i].value);
+  }
+
+  window.scrollTo(0, 0);
+
+  setTimeout(function() {
+    var opt = {
+      margin: [0.3, 0.4, 0.3, 0.4],
+      filename: 'Marketing_Triage_Report.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: { mode: ['css'], avoid: ['.score-category', '.live-total', '.decision-box', '.sig-block', '.invention-info'] }
+    };
+
+    html2pdf().set(opt).from(wrapper).save().then(function() {
+      // Restore textareas
+      for (var i = 0; i < textareas.length; i++) {
+        textareas[i].style.display = '';
+      }
+      // Remove mirrors
+      for (var i = 0; i < taMirrors.length; i++) {
+        taMirrors[i].parentNode.removeChild(taMirrors[i]);
+      }
+      wrapper.classList.remove('pdf-mode');
+      toolbar.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Download as PDF';
+    });
+  }, 300);
 }
 </script>
 </body>
