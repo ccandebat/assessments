@@ -9,11 +9,11 @@
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
   :root {
-    --main: #78BE1F;
-    --main-dark: #5A9A10;
-    --main-darker: #4A8209;
-    --main-light: #F1F9E6;
-    --main-border: #C3E29A;
+    --main: #CC9900;
+    --main-dark: #A67D00;
+    --main-darker: #8A6800;
+    --main-light: #FFF8E6;
+    --main-border: #E6CC80;
     --high-green: #2E7D32;
     --high-green-bg: #E8F5E9;
     --med-amber: #E65100;
@@ -30,7 +30,7 @@
 
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #F0F4EB; color: var(--gray-700); line-height: 1.5;
+    background: #F5F0E0; color: var(--gray-700); line-height: 1.5;
   }
 
   /* ---- Toolbar ---- */
@@ -52,7 +52,7 @@
   /* ---- Form wrapper ---- */
   .form-wrapper {
     max-width: 880px; margin: 30px auto; background: white;
-    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12);
   }
 
   /* ---- Header ---- */
@@ -84,7 +84,7 @@
   }
   .field input:focus, .field textarea:focus, .field select:focus {
     outline: none; border-color: var(--main-dark);
-    box-shadow: 0 0 0 2px rgba(120,190,31,.2);
+    box-shadow: 0 0 0 2px rgba(204,153,0,.2);
   }
   .field textarea { resize: vertical; }
 
@@ -158,7 +158,7 @@
   }
   .sub-field textarea:focus {
     outline: none; border-color: var(--main-dark);
-    box-shadow: 0 0 0 2px rgba(120,190,31,.2);
+    box-shadow: 0 0 0 2px rgba(204,153,0,.2);
   }
 
   /* ---- Summary ---- */
@@ -207,6 +207,20 @@
     background: var(--main-darker); color: white;
     text-align: center; padding: 10px; font-size: 10px; opacity: .85;
   }
+
+  /* ---- PDF helpers ---- */
+  .ta-mirror {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid var(--gray-200); border-radius: 4px;
+    font-size: 13px; font-family: 'Inter', sans-serif;
+    background: var(--gray-50); min-height: 80px;
+    word-break: break-word; overflow-wrap: break-word;
+    white-space: pre-wrap; line-height: 1.5; box-sizing: border-box;
+  }
+  .form-wrapper.pdf-mode {
+    margin: 0 auto; border-radius: 0; box-shadow: none;
+  }
+  .pdf-page-break { page-break-before: always; break-before: page; }
 
   @media print {
     body { background: white; }
@@ -477,26 +491,76 @@ function updateSummary(region, level) {
    PDF DOWNLOAD
    ============================================================ */
 function downloadPDF() {
-  const btn = document.getElementById('dlBtn');
+  var btn = document.getElementById('dlBtn');
   btn.disabled = true;
   btn.textContent = 'Generating…';
-  document.getElementById('toolbar').style.display = 'none';
 
-  const el = document.getElementById('formContent');
-  const opt = {
-    margin:       [0.2, 0.3, 0.2, 0.3],
-    filename:     'Marketing_Nationalization_Decision.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, logging: false },
-    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-    pagebreak:    { mode: ['css', 'legacy'], avoid: ['.section', '.summary-box', '.sig-block'] }
-  };
+  var toolbar = document.getElementById('toolbar');
+  var wrapper = document.getElementById('formContent');
 
-  html2pdf().set(opt).from(el).save().then(() => {
-    document.getElementById('toolbar').style.display = '';
-    btn.disabled = false;
-    btn.textContent = 'Download as PDF';
-  });
+  toolbar.style.display = 'none';
+  wrapper.classList.add('pdf-mode');
+
+  /* Replace textareas with visible divs */
+  var textareas = wrapper.querySelectorAll('textarea');
+  var taMirrors = [];
+  for (var i = 0; i < textareas.length; i++) {
+    var ta = textareas[i];
+    var mirror = document.createElement('div');
+    mirror.className = 'ta-mirror';
+    var val = ta.value;
+    if (val) {
+      mirror.textContent = val;
+    } else {
+      mirror.textContent = ta.placeholder;
+      mirror.style.color = '#999';
+    }
+    ta.style.display = 'none';
+    ta.parentNode.insertBefore(mirror, ta.nextSibling);
+    taMirrors.push(mirror);
+  }
+
+  /* Sync input values to attributes */
+  var inputs = wrapper.querySelectorAll('input[type="text"], input[type="date"], input[type="number"]');
+  for (var i = 0; i < inputs.length; i++) {
+    inputs[i].setAttribute('value', inputs[i].value);
+  }
+
+  /* Sync radio buttons */
+  var radios = wrapper.querySelectorAll('input[type="radio"]');
+  for (var i = 0; i < radios.length; i++) {
+    if (radios[i].checked) {
+      radios[i].setAttribute('checked', 'checked');
+    } else {
+      radios[i].removeAttribute('checked');
+    }
+  }
+
+  window.scrollTo(0, 0);
+
+  setTimeout(function() {
+    var opt = {
+      margin:      [0.3, 0.4, 0.3, 0.4],
+      filename:    'Marketing_Nationalization_Decision.pdf',
+      image:       { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF:       { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak:   { mode: ['css'], avoid: ['.sub-field', '.priority-row', '.invention-info', '.summary-box', '.sig-block', '.guidance'] }
+    };
+
+    html2pdf().set(opt).from(wrapper).save().then(function() {
+      for (var i = 0; i < textareas.length; i++) {
+        textareas[i].style.display = '';
+      }
+      for (var i = 0; i < taMirrors.length; i++) {
+        taMirrors[i].parentNode.removeChild(taMirrors[i]);
+      }
+      wrapper.classList.remove('pdf-mode');
+      toolbar.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Download as PDF';
+    });
+  }, 300);
 }
 </script>
 </body>
