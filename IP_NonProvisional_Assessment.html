@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gate 2: Non-Provisional Filing Decision — Tulane OIP</title>
+<title>Gate 2: Non-Provisional Filing Decision — Tulane OIPM</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -52,7 +52,7 @@
   /* ---- Form wrapper ---- */
   .form-wrapper {
     max-width: 880px; margin: 30px auto; background: white;
-    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12);
   }
 
   /* ---- Header ---- */
@@ -258,6 +258,39 @@
     text-align: center; padding: 10px; font-size: 10px; opacity: .85;
   }
 
+  /* ---- PDF page-break helpers ---- */
+  .score-table tr { page-break-inside: avoid; break-inside: avoid; }
+  .strat-item { page-break-inside: avoid; break-inside: avoid; }
+  .pros-card { page-break-inside: avoid; break-inside: avoid; }
+  .live-score { page-break-inside: avoid; break-inside: avoid; }
+  .decision-box { page-break-inside: avoid; break-inside: avoid; }
+  .sig-block { page-break-inside: avoid; break-inside: avoid; }
+  .invention-info { page-break-inside: avoid; break-inside: avoid; }
+
+  /* ---- Textarea mirror for PDF ---- */
+  .ta-mirror {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: var(--gray-50);
+    min-height: 80px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    box-sizing: border-box;
+  }
+
+  /* ---- PDF mode ---- */
+  .form-wrapper.pdf-mode {
+    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
   @media print {
     body { background: white; }
     .toolbar { display: none !important; }
@@ -268,14 +301,14 @@
 <body>
 
 <div class="toolbar" id="toolbar">
-  <span>Tulane OIP — Non-Provisional Filing Decision</span>
+  <span>Tulane OIPM — Non-Provisional Filing Decision</span>
   <button onclick="downloadPDF()" id="dlBtn">Download as PDF</button>
 </div>
 
 <div class="form-wrapper" id="formContent">
 
   <div class="header">
-    <h1>Tulane Office of Intellectual Property</h1>
+    <h1>Tulane Office of Intellectual Property Management</h1>
     <h2>Gate 2: Non-Provisional Filing Decision (Conversion)</h2>
     <div class="formula">(Patentability × Novelty Multiplier) + Strategic Bonus + Prosecution Modifier</div>
   </div>
@@ -544,7 +577,7 @@
   </div>
 
   <div class="footer">
-    Tulane Office of Intellectual Property &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Gate 2: Non-Provisional Filing Decision
+    Tulane Office of Intellectual Property Management &nbsp;•&nbsp; Confidential &nbsp;•&nbsp; Gate 2: Non-Provisional Filing Decision
   </div>
 
 </div>
@@ -674,26 +707,79 @@ function recalc() {
    PDF DOWNLOAD
    ============================================================ */
 function downloadPDF() {
-  const btn = document.getElementById('dlBtn');
+  var btn = document.getElementById('dlBtn');
   btn.disabled = true;
   btn.textContent = 'Generating…';
-  document.getElementById('toolbar').style.display = 'none';
 
-  const el = document.getElementById('formContent');
-  const opt = {
-    margin:       [0.2, 0.3, 0.2, 0.3],
-    filename:     'IP_NonProvisional_Decision.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, logging: false },
-    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-    pagebreak:    { mode: ['css', 'legacy'], avoid: ['.section', '.live-score', '.decision-box'] }
-  };
+  var toolbar = document.getElementById('toolbar');
+  var wrapper = document.getElementById('formContent');
 
-  html2pdf().set(opt).from(el).save().then(() => {
-    document.getElementById('toolbar').style.display = '';
-    btn.disabled = false;
-    btn.textContent = 'Download as PDF';
-  });
+  toolbar.style.display = 'none';
+  wrapper.classList.add('pdf-mode');
+
+  // Replace textareas with visible divs
+  var textareas = wrapper.querySelectorAll('textarea');
+  var taMirrors = [];
+  for (var i = 0; i < textareas.length; i++) {
+    var ta = textareas[i];
+    var mirror = document.createElement('div');
+    mirror.className = 'ta-mirror';
+    var val = ta.value;
+    if (val) {
+      mirror.textContent = val;
+    } else {
+      mirror.textContent = ta.placeholder;
+      mirror.style.color = '#999';
+    }
+    ta.style.display = 'none';
+    ta.parentNode.insertBefore(mirror, ta.nextSibling);
+    taMirrors.push(mirror);
+  }
+
+  // Sync input values to attributes
+  var inputs = wrapper.querySelectorAll('input[type="text"], input[type="date"], input[type="number"]');
+  for (var i = 0; i < inputs.length; i++) {
+    inputs[i].setAttribute('value', inputs[i].value);
+  }
+
+  // Sync select values
+  var selects = wrapper.querySelectorAll('select');
+  for (var i = 0; i < selects.length; i++) {
+    var sel = selects[i];
+    for (var j = 0; j < sel.options.length; j++) {
+      if (sel.options[j].value === sel.value) {
+        sel.options[j].setAttribute('selected', 'selected');
+      } else {
+        sel.options[j].removeAttribute('selected');
+      }
+    }
+  }
+
+  window.scrollTo(0, 0);
+
+  setTimeout(function() {
+    var opt = {
+      margin: [0.3, 0.4, 0.3, 0.4],
+      filename: 'IP_NonProvisional_Decision.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: { mode: ['css'], avoid: ['.strat-item', '.pros-card', '.live-score', '.decision-box', '.sig-block', '.invention-info', '.thresholds'] }
+    };
+
+    html2pdf().set(opt).from(wrapper).save().then(function() {
+      for (var i = 0; i < textareas.length; i++) {
+        textareas[i].style.display = '';
+      }
+      for (var i = 0; i < taMirrors.length; i++) {
+        taMirrors[i].parentNode.removeChild(taMirrors[i]);
+      }
+      wrapper.classList.remove('pdf-mode');
+      toolbar.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Download as PDF';
+    });
+  }, 300);
 }
 </script>
 </body>
