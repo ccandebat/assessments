@@ -49,7 +49,7 @@
   /* ---- Form wrapper ---- */
   .form-wrapper {
     max-width: 900px; margin: 30px auto; background: white;
-    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12); overflow: hidden;
+    border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.12);
   }
 
   /* ---- Header ---- */
@@ -121,28 +121,28 @@
   .market-col:last-child { border-right: none; }
   .market-col-header {
     background: var(--tulane-blue); color: white;
-    padding: 8px 12px; font-weight: 700; font-size: 12px;
+    padding: 6px 8px; font-weight: 700; font-size: 11px;
     text-align: center; text-transform: uppercase; letter-spacing: .5px;
   }
   .market-col-sub {
-    font-size: 10px; font-weight: 400; opacity: .8; display: block;
+    font-size: 9px; font-weight: 400; opacity: .8; display: block;
     text-transform: none; letter-spacing: 0;
   }
   .market-row {
-    border-bottom: 1px solid var(--gray-200); padding: 12px;
+    border-bottom: 1px solid var(--gray-200); padding: 6px 8px;
   }
   .market-row:last-child { border-bottom: none; }
   .market-row-label {
-    font-size: 11px; font-weight: 600; color: var(--tulane-blue);
-    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
+    font-size: 10px; font-weight: 600; color: var(--tulane-blue);
+    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px;
   }
   .market-row-label .icon { margin-right: 4px; }
   .market-row input, .market-row textarea {
-    width: 100%; padding: 7px 9px; border: 1px solid var(--gray-200);
-    border-radius: 4px; font-size: 13px; font-family: inherit;
+    width: 100%; padding: 5px 7px; border: 1px solid var(--gray-200);
+    border-radius: 4px; font-size: 12px; font-family: inherit;
     background: var(--gray-50);
   }
-  .market-row textarea { min-height: 60px; resize: vertical; }
+  .market-row textarea { min-height: 36px; resize: vertical; }
   .market-row input:focus, .market-row textarea:focus {
     outline: none; border-color: var(--tulane-blue);
     box-shadow: 0 0 0 2px rgba(0,85,135,.08);
@@ -260,6 +260,55 @@
   .footer {
     background: var(--tulane-blue); color: white;
     text-align: center; padding: 10px; font-size: 10px; opacity: .85;
+  }
+
+  /* ---- PDF page-break helpers ---- */
+  .meta-info { page-break-inside: avoid; break-inside: avoid; }
+  .market-grid { page-break-inside: avoid; break-inside: avoid; }
+  .strat-item { page-break-inside: avoid; break-inside: avoid; }
+  .decision-box { page-break-inside: avoid; break-inside: avoid; }
+  .sig-block { page-break-inside: avoid; break-inside: avoid; }
+  .milestone-table tr { page-break-inside: avoid; break-inside: avoid; }
+
+  /* ---- Textarea mirror for PDF ---- */
+  .ta-mirror {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: var(--gray-50);
+    min-height: 60px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    box-sizing: border-box;
+  }
+
+  /* smaller mirror for market grid textareas */
+  .market-row .ta-mirror {
+    min-height: 28px;
+    padding: 5px 7px;
+    font-size: 12px;
+    background: var(--gray-50);
+  }
+
+  /* smaller mirror for milestone table textareas */
+  .milestone-table .ta-mirror {
+    min-height: 30px;
+    padding: 4px 2px;
+    font-size: 13px;
+    border: none;
+    background: transparent;
+  }
+
+  /* ---- PDF mode ---- */
+  .form-wrapper.pdf-mode {
+    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   @media print {
@@ -619,30 +668,88 @@ function removeMilestoneRow(tableId) {
    PDF DOWNLOAD
    ============================================================ */
 function downloadPDF() {
-  const btn = document.getElementById('dlBtn');
+  var btn = document.getElementById('dlBtn');
   btn.disabled = true;
   btn.textContent = 'Generating…';
-  document.getElementById('toolbar').style.display = 'none';
+
+  var toolbar = document.getElementById('toolbar');
+  var wrapper = document.getElementById('formContent');
+
+  toolbar.style.display = 'none';
+  wrapper.classList.add('pdf-mode');
 
   // Hide add/remove buttons for clean PDF
-  document.querySelectorAll('.matrix-btns').forEach(el => el.style.display = 'none');
+  var matrixBtns = document.querySelectorAll('.matrix-btns');
+  for (var b = 0; b < matrixBtns.length; b++) {
+    matrixBtns[b].style.display = 'none';
+  }
 
-  const el = document.getElementById('formContent');
-  const opt = {
-    margin:       [0.2, 0.3, 0.2, 0.3],
-    filename:     'Market_DeepDive_Report.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, logging: false },
-    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-    pagebreak:    { mode: ['css', 'legacy'], avoid: ['.section', '.meta-info', '.sig-block'] }
-  };
+  // Replace textareas with visible divs
+  var textareas = wrapper.querySelectorAll('textarea');
+  var taMirrors = [];
+  for (var i = 0; i < textareas.length; i++) {
+    var ta = textareas[i];
+    var mirror = document.createElement('div');
+    mirror.className = 'ta-mirror';
+    var val = ta.value;
+    if (val) {
+      mirror.textContent = val;
+    } else {
+      mirror.textContent = ta.placeholder;
+      mirror.style.color = '#999';
+    }
+    ta.style.display = 'none';
+    ta.parentNode.insertBefore(mirror, ta.nextSibling);
+    taMirrors.push(mirror);
+  }
 
-  html2pdf().set(opt).from(el).save().then(() => {
-    document.getElementById('toolbar').style.display = '';
-    document.querySelectorAll('.matrix-btns').forEach(el => el.style.display = '');
-    btn.disabled = false;
-    btn.textContent = 'Download as PDF';
-  });
+  // Sync input values to attributes
+  var inputs = wrapper.querySelectorAll('input[type="text"], input[type="date"], input[type="number"]');
+  for (var i = 0; i < inputs.length; i++) {
+    inputs[i].setAttribute('value', inputs[i].value);
+  }
+
+  // Sync select values
+  var selects = wrapper.querySelectorAll('select');
+  for (var i = 0; i < selects.length; i++) {
+    var sel = selects[i];
+    for (var j = 0; j < sel.options.length; j++) {
+      if (sel.options[j].value === sel.value) {
+        sel.options[j].setAttribute('selected', 'selected');
+      } else {
+        sel.options[j].removeAttribute('selected');
+      }
+    }
+  }
+
+  window.scrollTo(0, 0);
+
+  setTimeout(function() {
+    var opt = {
+      margin: [0.3, 0.4, 0.3, 0.4],
+      filename: 'Market_DeepDive_Report.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: { mode: ['css'], avoid: ['.meta-info', '.market-grid', '.sig-block', '.comp-matrix', '.milestone-table'] }
+    };
+
+    html2pdf().set(opt).from(wrapper).save().then(function() {
+      for (var i = 0; i < textareas.length; i++) {
+        textareas[i].style.display = '';
+      }
+      for (var i = 0; i < taMirrors.length; i++) {
+        taMirrors[i].parentNode.removeChild(taMirrors[i]);
+      }
+      for (var b = 0; b < matrixBtns.length; b++) {
+        matrixBtns[b].style.display = '';
+      }
+      wrapper.classList.remove('pdf-mode');
+      toolbar.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Download as PDF';
+    });
+  }, 300);
 }
 </script>
 </body>
